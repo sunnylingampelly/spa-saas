@@ -52,7 +52,6 @@ const vTrackPosition = {
         <label v-if="label" class="form-label">{{ label }}<span v-if="required" class="text-rose-500"> *</span></label>
 
         <Listbox :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" v-slot="{ open }">
-            {{ watch(() => open, onOpenChange) }}
             <div ref="anchorRef" class="relative">
                 <ListboxButton
                     class="form-input flex w-full items-center justify-between text-left"
