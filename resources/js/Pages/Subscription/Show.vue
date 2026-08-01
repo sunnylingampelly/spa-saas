@@ -19,6 +19,7 @@ const props = defineProps({
     payoutQrSvgs: { type: Object, required: true },
     razorpayEnabled: { type: Boolean, required: true },
     razorpayKeyId: { type: String, default: null },
+    pendingManualPlanCodes: { type: Array, default: () => [] },
 });
 
 const rupees = (value) => `₹${Number(value).toLocaleString('en-IN')}`;
@@ -136,32 +137,38 @@ function submitManual(planCode) {
                 Online payment isn't set up yet — use UPI / bank transfer below.
             </p>
 
-            <button
-                class="mt-3 w-full text-sm font-medium text-brand-600 hover:text-brand-700"
-                @click="manualFormOpenFor = manualFormOpenFor === code ? null : code"
-            >
-                {{ manualFormOpenFor === code ? 'Hide UPI / bank transfer details' : 'Pay via UPI / bank transfer instead' }}
-            </button>
+            <p v-if="pendingManualPlanCodes.includes(code)" class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                Your UPI / bank transfer payment is awaiting confirmation from the SpaOrbit team.
+            </p>
 
-            <div v-if="manualFormOpenFor === code" class="mt-4 space-y-4 rounded-xl border border-slate-100 p-4 dark:border-slate-800">
-                <div class="flex items-center gap-4">
-                    <div class="rounded-xl bg-white p-2" v-html="payoutQrSvgs[code]" />
-                    <div class="text-sm">
-                        <p class="text-slate-500 dark:text-slate-400">UPI ID</p>
-                        <p class="font-medium text-slate-900 dark:text-white">{{ payout.upi_id }}</p>
-                        <p class="mt-2 text-slate-500 dark:text-slate-400">Account name</p>
-                        <p class="font-medium text-slate-900 dark:text-white">{{ payout.account_name }}</p>
+            <template v-else>
+                <button
+                    class="mt-3 w-full text-sm font-medium text-brand-600 hover:text-brand-700"
+                    @click="manualFormOpenFor = manualFormOpenFor === code ? null : code"
+                >
+                    {{ manualFormOpenFor === code ? 'Hide UPI / bank transfer details' : 'Pay via UPI / bank transfer instead' }}
+                </button>
+
+                <div v-if="manualFormOpenFor === code" class="mt-4 space-y-4 rounded-xl border border-slate-100 p-4 dark:border-slate-800">
+                    <div class="flex items-center gap-4">
+                        <div class="rounded-xl bg-white p-2" v-html="payoutQrSvgs[code]" />
+                        <div class="text-sm">
+                            <p class="text-slate-500 dark:text-slate-400">UPI ID</p>
+                            <p class="font-medium text-slate-900 dark:text-white">{{ payout.upi_id }}</p>
+                            <p class="mt-2 text-slate-500 dark:text-slate-400">Account name</p>
+                            <p class="font-medium text-slate-900 dark:text-white">{{ payout.account_name }}</p>
+                        </div>
                     </div>
+                    <BaseTextarea
+                        v-model="manualForm.proof_note"
+                        label="Reference / note (optional)"
+                        placeholder="e.g. UPI transaction ID"
+                    />
+                    <BaseButton variant="secondary" class="w-full" :disabled="manualForm.processing" @click="submitManual(code)">
+                        I've made the payment
+                    </BaseButton>
                 </div>
-                <BaseTextarea
-                    v-model="manualForm.proof_note"
-                    label="Reference / note (optional)"
-                    placeholder="e.g. UPI transaction ID"
-                />
-                <BaseButton variant="secondary" class="w-full" :disabled="manualForm.processing" @click="submitManual(code)">
-                    I've made the payment
-                </BaseButton>
-            </div>
+            </template>
         </BaseCard>
     </div>
 

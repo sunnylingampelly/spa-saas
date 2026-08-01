@@ -1,7 +1,7 @@
 <script setup>
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     modelValue: { type: [String, Number, Boolean], default: null },
@@ -19,14 +19,41 @@ const normalizedOptions = computed(() => props.options.map(
 ));
 
 const selectedLabel = computed(() => normalizedOptions.value.find((opt) => opt.value === props.modelValue)?.label ?? null);
+
+// See BaseCombobox.vue for why this is teleported: cards use backdrop-blur, which creates
+// its own stacking context, so a dropdown's z-index can never escape above a later sibling
+// card — teleporting straight to <body> and positioning manually sidesteps that entirely.
+const anchorRef = ref(null);
+const position = ref({ top: 0, left: 0, width: 0 });
+
+function updatePosition() {
+    if (!anchorRef.value) return;
+    const rect = anchorRef.value.getBoundingClientRect();
+    position.value = { top: rect.bottom, left: rect.left, width: rect.width };
+}
+
+// The options panel only exists in the DOM while open (v-if="open" below), so tying
+// position tracking to its own mount/unmount avoids re-registering listeners on every render.
+const vTrackPosition = {
+    mounted() {
+        updatePosition();
+        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('resize', updatePosition);
+    },
+    unmounted() {
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+    },
+};
 </script>
 
 <template>
     <div>
         <label v-if="label" class="form-label">{{ label }}<span v-if="required" class="text-rose-500"> *</span></label>
 
-        <Listbox :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
-            <div class="relative">
+        <Listbox :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" v-slot="{ open }">
+            {{ watch(() => open, onOpenChange) }}
+            <div ref="anchorRef" class="relative">
                 <ListboxButton
                     class="form-input flex w-full items-center justify-between text-left"
                     :class="error && 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/10'"
@@ -34,9 +61,16 @@ const selectedLabel = computed(() => normalizedOptions.value.find((opt) => opt.v
                     <span :class="!selectedLabel && 'text-slate-400'">{{ selectedLabel ?? placeholder }}</span>
                     <ChevronUpDownIcon class="h-4 w-4 flex-none text-slate-400" />
                 </ListboxButton>
+            </div>
 
+            <Teleport to="body">
                 <transition leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                    <ListboxOptions class="card absolute z-20 mt-1.5 max-h-60 w-full overflow-auto !p-1.5 text-sm focus:outline-none">
+                    <ListboxOptions
+                        v-if="open"
+                        v-track-position
+                        class="card fixed z-50 max-h-60 overflow-auto !p-1.5 text-sm focus:outline-none"
+                        :style="{ top: `${position.top + 6}px`, left: `${position.left}px`, width: `${position.width}px` }"
+                    >
                         <ListboxOption
                             v-for="opt in normalizedOptions"
                             :key="opt.value"
@@ -54,7 +88,7 @@ const selectedLabel = computed(() => normalizedOptions.value.find((opt) => opt.v
                         </ListboxOption>
                     </ListboxOptions>
                 </transition>
-            </div>
+            </Teleport>
         </Listbox>
 
         <p v-if="error" class="mt-1.5 text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>

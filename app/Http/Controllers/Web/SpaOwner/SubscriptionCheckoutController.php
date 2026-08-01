@@ -93,6 +93,16 @@ class SubscriptionCheckoutController extends Controller
         $spa = $tenantContext->getCurrentSpa();
         $plan = config("subscriptions.plans.{$data['plan']}");
 
+        $alreadyPending = SubscriptionPayment::where('subscription_id', $spa->subscription->id)
+            ->where('plan_code', $data['plan'])
+            ->where('method', 'manual')
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($alreadyPending) {
+            return back()->with('success', 'Your payment is already awaiting confirmation — no need to submit again.');
+        }
+
         SubscriptionPayment::create([
             'spa_id' => $spa->id,
             'subscription_id' => $spa->subscription->id,

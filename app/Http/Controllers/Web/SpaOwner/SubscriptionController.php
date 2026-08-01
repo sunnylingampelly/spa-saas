@@ -18,6 +18,11 @@ class SubscriptionController extends Controller
         $subscription = $spa->subscription;
         $plans = config('subscriptions.plans');
 
+        $pendingManualPlanCodes = $subscription->payments()
+            ->where('method', 'manual')
+            ->where('status', 'pending')
+            ->pluck('plan_code');
+
         return Inertia::render('Subscription/Show', [
             'subscription' => $subscription,
             'payments' => $subscription->payments()->latest()->limit(10)->get(),
@@ -28,6 +33,7 @@ class SubscriptionController extends Controller
             ]),
             'razorpayEnabled' => $gateway->isConfigured(),
             'razorpayKeyId' => config('services.razorpay.key_id'),
+            'pendingManualPlanCodes' => $pendingManualPlanCodes,
         ]);
     }
 }
