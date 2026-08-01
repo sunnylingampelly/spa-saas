@@ -10,6 +10,7 @@ use App\Providers\FortifyServiceProvider;
 use App\Providers\HorizonServiceProvider;
 use App\Providers\RepositoryServiceProvider;
 use App\Providers\ServicesServiceProvider;
+use App\Providers\SupportServiceProvider;
 use App\Providers\TenancyServiceProvider;
 
 return [
@@ -24,4 +25,5 @@ return [
     AppointmentsServiceProvider::class,
     BillingServiceProvider::class,
     ExpensesServiceProvider::class,
+    SupportServiceProvider::class,
 ];

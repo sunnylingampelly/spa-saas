@@ -54,6 +54,36 @@ class AnnouncementTest extends TestCase
         $response->assertInertia(fn ($page) => $page->where('announcement.message', 'Second message.'));
     }
 
+    public function test_a_published_announcement_defaults_to_the_indigo_color_when_none_is_chosen(): void
+    {
+        $this->actingAs($this->admin)->post(route('admin.announcements.store'), ['message' => 'No color chosen.']);
+
+        $this->assertSame('indigo', Announcement::firstOrFail()->color);
+    }
+
+    public function test_super_admin_can_choose_the_banners_color(): void
+    {
+        $this->actingAs($this->admin)->post(route('admin.announcements.store'), [
+            'message' => 'Scheduled maintenance tonight.',
+            'color' => 'rose',
+        ]);
+
+        $this->assertSame('rose', Announcement::firstOrFail()->color);
+
+        $response = $this->actingAs($this->owner)->get('/dashboard');
+        $response->assertInertia(fn ($page) => $page->where('announcement.color', 'rose'));
+    }
+
+    public function test_an_invalid_color_is_rejected(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('admin.announcements.store'), [
+            'message' => 'Bad color test.',
+            'color' => 'not-a-real-color',
+        ]);
+
+        $response->assertSessionHasErrors('color');
+    }
+
     public function test_withdrawing_an_announcement_removes_it_from_shared_props(): void
     {
         $this->actingAs($this->admin)->post(route('admin.announcements.store'), ['message' => 'Temporary notice.']);

@@ -6,10 +6,13 @@ import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import BaseInput from '../../Components/Ui/BaseInput.vue';
 import BaseListbox from '../../Components/Ui/BaseListbox.vue';
+import { useConfirm } from '../../Composables/useConfirm';
 import { formatDate } from '../../Composables/useDateFormat.js';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
+
+const { promptDialog } = useConfirm();
 
 const paymentMethodOptions = [
     { value: 'cash', label: 'Cash' },
@@ -61,8 +64,14 @@ function submitRefund() {
     });
 }
 
-function cancelInvoice() {
-    const reason = prompt('Reason for cancelling this invoice (optional):');
+async function cancelInvoice() {
+    const reason = await promptDialog({
+        title: 'Cancel this invoice',
+        message: 'Reason for cancelling this invoice (optional):',
+        placeholder: 'e.g. Customer requested cancellation',
+        confirmLabel: 'Cancel Invoice',
+        danger: true,
+    });
     if (reason !== null) {
         useForm({ reason }).post(route('invoices.cancel', props.invoice.id), { preserveScroll: true });
     }

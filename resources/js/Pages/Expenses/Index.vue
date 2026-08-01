@@ -5,10 +5,13 @@ import BaseBadge from '../../Components/Ui/BaseBadge.vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import BaseTable from '../../Components/Ui/BaseTable.vue';
+import { useConfirm } from '../../Composables/useConfirm';
 import { formatDate } from '../../Composables/useDateFormat.js';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
+
+const { confirmDialog } = useConfirm();
 
 defineProps({
     expenses: { type: Object, required: true },
@@ -23,8 +26,14 @@ const columns = [
     { key: 'actions', label: '' },
 ];
 
-function destroy(expense) {
-    if (confirm(`Delete this ${expense.category} expense?`)) {
+async function destroy(expense) {
+    const confirmed = await confirmDialog({
+        title: 'Delete this expense?',
+        message: `Delete this ${expense.category} expense?`,
+        confirmLabel: 'Delete',
+        danger: true,
+    });
+    if (confirmed) {
         router.delete(route('expenses.destroy', expense.id), { preserveScroll: true });
     }
 }

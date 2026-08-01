@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Announcement extends Model
 {
+    public const COLORS = ['indigo', 'brand', 'emerald', 'amber', 'rose', 'slate'];
+
     protected $fillable = [
         'message',
+        'color',
         'is_active',
         'created_by_user_id',
     ];

@@ -7,6 +7,7 @@ import {
     BuildingStorefrontIcon,
     CalendarDaysIcon,
     ChartBarIcon,
+    ChatBubbleLeftRightIcon,
     CreditCardIcon,
     MagnifyingGlassIcon,
     MoonIcon,
@@ -72,11 +73,23 @@ const navigation = [
     { name: 'Commissions', href: route('reports.commissions'), icon: ChartBarIcon, matches: 'reports.*' },
     { name: 'Spa Profile', href: route('spa.profile.show'), icon: BuildingStorefrontIcon, matches: 'spa.profile.*' },
     { name: 'Subscription', href: route('subscription.show'), icon: CreditCardIcon, matches: 'subscription.*' },
+    { name: 'Support', href: route('support.tickets.index'), icon: ChatBubbleLeftRightIcon, matches: 'support.tickets.*' },
 ];
 
 const currentSpaName = computed(() => page.props.currentSpa?.name);
 const impersonating = computed(() => page.props.impersonating);
 const announcement = computed(() => page.props.announcement);
+const unreadSupportCount = computed(() => page.props.unreadSupportCount ?? 0);
+
+const announcementColorClasses = {
+    indigo: 'bg-indigo-600 text-white',
+    brand: 'bg-brand-600 text-white',
+    emerald: 'bg-emerald-600 text-white',
+    amber: 'bg-amber-600 text-white',
+    rose: 'bg-rose-600 text-white',
+    slate: 'bg-slate-700 text-white',
+};
+const announcementClass = computed(() => announcementColorClasses[announcement.value?.color] ?? announcementColorClasses.indigo);
 
 function stopImpersonating() {
     router.post(route('stop-impersonating'));
@@ -238,6 +251,12 @@ onMounted(() => {
                     />
                     <component :is="item.icon" class="h-5 w-5" />
                     {{ item.name }}
+                    <span
+                        v-if="item.name === 'Support' && unreadSupportCount > 0"
+                        class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-semibold text-white"
+                    >
+                        {{ unreadSupportCount }}
+                    </span>
                 </Link>
             </nav>
         </aside>
@@ -245,7 +264,8 @@ onMounted(() => {
         <div class="flex flex-1 flex-col lg:pl-64">
             <div
                 v-if="announcement"
-                class="sticky top-0 z-30 bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white sm:px-6"
+                class="sticky top-0 z-30 px-4 py-2 text-center text-sm font-medium sm:px-6"
+                :class="announcementClass"
             >
                 {{ announcement.message }}
             </div>

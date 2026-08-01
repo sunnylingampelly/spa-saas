@@ -41,10 +41,10 @@ class InvoicePublicPaymentTest extends TestCase
         ]);
         $this->invoice = Invoice::firstOrFail();
 
-        config([
-            'services.razorpay.key_id' => 'rzp_test_fake',
-            'services.razorpay.key_secret' => 'test_secret_key',
-            'services.razorpay.webhook_secret' => 'test_webhook_secret',
+        $this->invoice->spa->update([
+            'razorpay_key_id' => 'rzp_spa_fake',
+            'razorpay_key_secret' => 'spa_secret_key',
+            'razorpay_webhook_secret' => 'spa_webhook_secret',
         ]);
     }
 
@@ -68,9 +68,18 @@ class InvoicePublicPaymentTest extends TestCase
 
     public function test_create_order_returns_503_when_razorpay_is_not_configured(): void
     {
-        config(['services.razorpay.key_id' => null]);
+        $this->invoice->spa->update(['razorpay_key_id' => null]);
 
         $this->post("/pay/{$this->invoice->public_token}/razorpay/order")->assertStatus(503);
+    }
+
+    public function test_razorpay_key_id_returned_to_the_browser_is_the_spas_own_not_the_platforms(): void
+    {
+        config(['services.razorpay.key_id' => 'rzp_platform_should_never_be_used']);
+
+        $response = $this->get("/pay/{$this->invoice->public_token}");
+
+        $response->assertInertia(fn ($page) => $page->where('razorpayKeyId', 'rzp_spa_fake'));
     }
 
     public function test_create_order_rejects_an_invoice_thats_already_fully_paid(): void
@@ -91,7 +100,7 @@ class InvoicePublicPaymentTest extends TestCase
 
     public function test_the_financial_rate_limiter_throttles_public_payment_attempts(): void
     {
-        config(['services.razorpay.key_id' => null]);
+        $this->invoice->spa->update(['razorpay_key_id' => null]);
 
         for ($i = 0; $i < 20; $i++) {
             $this->post("/pay/{$this->invoice->public_token}/razorpay/order")->assertStatus(503);

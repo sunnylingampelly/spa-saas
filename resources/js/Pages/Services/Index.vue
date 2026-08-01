@@ -3,9 +3,12 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { PlusIcon } from '@heroicons/vue/24/outline';
 import BaseBadge from '../../Components/Ui/BaseBadge.vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
+import { useConfirm } from '../../Composables/useConfirm';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
+
+const { confirmDialog } = useConfirm();
 
 const props = defineProps({
     services: { type: Object, required: true },
@@ -16,8 +19,14 @@ function toggleStatus(service) {
     router.patch(route('services.toggle-status', service.id), {}, { preserveScroll: true });
 }
 
-function destroy(service) {
-    if (confirm(`Delete "${service.name}"?`)) {
+async function destroy(service) {
+    const confirmed = await confirmDialog({
+        title: 'Delete this service?',
+        message: `Delete "${service.name}"?`,
+        confirmLabel: 'Delete',
+        danger: true,
+    });
+    if (confirmed) {
         router.delete(route('services.destroy', service.id), { preserveScroll: true });
     }
 }

@@ -11,8 +11,9 @@ use Inertia\Response;
 
 class SubscriptionController extends Controller
 {
-    public function show(TenantContext $tenantContext, RazorpayGateway $gateway, PayoutQrCodeService $qrCodeService): Response
+    public function show(TenantContext $tenantContext, PayoutQrCodeService $qrCodeService): Response
     {
+        $gateway = RazorpayGateway::platform();
         $spa = $tenantContext->getCurrentSpa();
         $subscription = $spa->subscription;
         $plans = config('subscriptions.plans');

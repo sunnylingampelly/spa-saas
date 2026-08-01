@@ -14,8 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 class SubscriptionCheckoutController extends Controller
 {
-    public function razorpayOrder(Request $request, TenantContext $tenantContext, RazorpayGateway $gateway)
+    public function razorpayOrder(Request $request, TenantContext $tenantContext)
     {
+        $gateway = RazorpayGateway::platform();
+
         abort_unless($gateway->isConfigured(), 503, 'Online payments are not configured yet.');
 
         $planCode = $request->validate([
@@ -51,9 +53,10 @@ class SubscriptionCheckoutController extends Controller
     public function razorpayVerify(
         Request $request,
         TenantContext $tenantContext,
-        RazorpayGateway $gateway,
         ActivateSubscriptionFromPaymentAction $activateSubscription,
     ): RedirectResponse {
+        $gateway = RazorpayGateway::platform();
+
         $data = $request->validate([
             'razorpay_order_id' => ['required', 'string'],
             'razorpay_payment_id' => ['required', 'string'],

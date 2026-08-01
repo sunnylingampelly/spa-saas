@@ -26,7 +26,12 @@ class Spa extends Model implements HasMedia
         'city', 'state', 'pincode', 'google_maps_link', 'opening_time', 'closing_time',
         'weekly_off_days', 'holiday_calendar', 'invoice_prefix', 'invoice_footer_note',
         'financial_year_start_month', 'timezone', 'currency', 'status', 'onboarding_completed_at',
+        'razorpay_key_id', 'razorpay_key_secret', 'razorpay_webhook_secret', 'razorpay_webhook_token',
     ];
+
+    // Razorpay secrets must never round-trip to the browser via an Inertia `'spa' => $spa` prop,
+    // regardless of which controller renders the model — enforced here, not by controller discipline.
+    protected $hidden = ['razorpay_key_secret', 'razorpay_webhook_secret'];
 
     protected function casts(): array
     {
@@ -34,6 +39,8 @@ class Spa extends Model implements HasMedia
             'weekly_off_days' => 'array',
             'holiday_calendar' => 'array',
             'onboarding_completed_at' => 'datetime',
+            'razorpay_key_secret' => 'encrypted',
+            'razorpay_webhook_secret' => 'encrypted',
         ];
     }
 
@@ -69,6 +76,7 @@ class Spa extends Model implements HasMedia
     {
         return LogOptions::defaults()
             ->logAll()
+            ->logExcept(['razorpay_key_secret', 'razorpay_webhook_secret'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

@@ -24,7 +24,7 @@ const loading = ref(false);
 function handleError(err) {
     if (err.response?.status === 423) {
         const redirect = encodeURIComponent(route('admin.two-factor.setup'));
-        window.location.href = `/user/confirm-password?redirect=${redirect}`;
+        router.visit(`/user/confirm-password?redirect=${redirect}`);
         return;
     }
     error.value = err.response?.data?.message || 'Something went wrong — please try again.';

@@ -20,6 +20,7 @@ use App\Http\Controllers\Web\SpaOwner\ServiceController;
 use App\Http\Controllers\Web\SpaOwner\SpaProfileController;
 use App\Http\Controllers\Web\SpaOwner\SubscriptionCheckoutController;
 use App\Http\Controllers\Web\SpaOwner\SubscriptionController;
+use App\Http\Controllers\Web\SpaOwner\SupportTicketController;
 use App\Http\Controllers\Web\SuperAdmin\ActivityLogController;
 use App\Http\Controllers\Web\SuperAdmin\AdminUserController;
 use App\Http\Controllers\Web\SuperAdmin\AnnouncementController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Web\SuperAdmin\DashboardController as SuperAdminDashboa
 use App\Http\Controllers\Web\SuperAdmin\PaymentController as SuperAdminPaymentController;
 use App\Http\Controllers\Web\SuperAdmin\PendingPaymentController;
 use App\Http\Controllers\Web\SuperAdmin\SpaController as SuperAdminSpaController;
+use App\Http\Controllers\Web\SuperAdmin\SupportTicketController as SuperAdminSupportTicketController;
 use App\Http\Controllers\Web\SuperAdmin\TwoFactorSetupController;
 use App\Http\Controllers\Web\StopImpersonationController;
 use Illuminate\Support\Facades\Route;
@@ -90,6 +92,11 @@ Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'throttle:120,1'])->
     Route::get('/spa/profile', [SpaProfileController::class, 'show'])->name('spa.profile.show');
     Route::put('/spa/profile', [SpaProfileController::class, 'update'])->name('spa.profile.update');
 
+    Route::middleware('throttle:financial')->group(function () {
+        Route::put('/spa/payment-settings', [SpaProfileController::class, 'updatePaymentSettings'])->name('spa.payment-settings.update');
+        Route::delete('/spa/payment-settings', [SpaProfileController::class, 'disconnectPaymentSettings'])->name('spa.payment-settings.disconnect');
+    });
+
     Route::get('/subscription', [SubscriptionController::class, 'show'])->name('subscription.show');
 
     Route::middleware('throttle:financial')->group(function () {
@@ -97,6 +104,12 @@ Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'throttle:120,1'])->
         Route::post('/subscription/razorpay/verify', [SubscriptionCheckoutController::class, 'razorpayVerify'])->name('subscription.razorpay.verify');
         Route::post('/subscription/manual', [SubscriptionCheckoutController::class, 'manualSubmit'])->name('subscription.manual');
     });
+
+    Route::get('/support/tickets', [SupportTicketController::class, 'index'])->name('support.tickets.index');
+    Route::get('/support/tickets/create', [SupportTicketController::class, 'create'])->name('support.tickets.create');
+    Route::post('/support/tickets', [SupportTicketController::class, 'store'])->name('support.tickets.store');
+    Route::get('/support/tickets/{ticket}', [SupportTicketController::class, 'show'])->name('support.tickets.show');
+    Route::post('/support/tickets/{ticket}/messages', [SupportTicketController::class, 'reply'])->name('support.tickets.reply');
 });
 
 Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'subscription.active', 'throttle:120,1'])->group(function () {
@@ -148,6 +161,10 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
         Route::get('/spas/{spa}', [SuperAdminSpaController::class, 'show'])->name('spas.show');
         Route::patch('/spas/{spa}/status', [SuperAdminSpaController::class, 'updateStatus'])->name('spas.update-status');
         Route::post('/spas/{spa}/impersonate', [SuperAdminSpaController::class, 'impersonate'])->name('spas.impersonate');
+        Route::patch('/spas/{spa}/subscription', [SuperAdminSpaController::class, 'updateSubscription'])->name('spas.subscription.update');
+        Route::patch('/spas/{spa}/owner', [SuperAdminSpaController::class, 'updateOwner'])->name('spas.owner.update');
+        Route::patch('/spas/{spa}/owner/status', [SuperAdminSpaController::class, 'toggleOwnerStatus'])->name('spas.owner.toggle-status');
+        Route::delete('/spas/{spa}/owner', [SuperAdminSpaController::class, 'deleteOwner'])->name('spas.owner.delete');
 
         Route::get('/payments', [SuperAdminPaymentController::class, 'index'])->name('payments.index');
 
@@ -162,5 +179,10 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
         Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
         Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
         Route::patch('/announcements/{announcement}/deactivate', [AnnouncementController::class, 'deactivate'])->name('announcements.deactivate');
+
+        Route::get('/support-tickets', [SuperAdminSupportTicketController::class, 'index'])->name('support-tickets.index');
+        Route::get('/support-tickets/{ticket}', [SuperAdminSupportTicketController::class, 'show'])->name('support-tickets.show');
+        Route::post('/support-tickets/{ticket}/messages', [SuperAdminSupportTicketController::class, 'reply'])->name('support-tickets.reply');
+        Route::patch('/support-tickets/{ticket}/status', [SuperAdminSupportTicketController::class, 'updateStatus'])->name('support-tickets.update-status');
     });
 });

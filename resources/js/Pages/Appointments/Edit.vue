@@ -5,10 +5,13 @@ import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import BaseCombobox from '../../Components/Ui/BaseCombobox.vue';
 import BaseTextarea from '../../Components/Ui/BaseTextarea.vue';
+import { useConfirm } from '../../Composables/useConfirm';
 import { formatDate } from '../../Composables/useDateFormat.js';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
+
+const { confirmDialog } = useConfirm();
 
 const props = defineProps({
     appointment: { type: Object, required: true },
@@ -34,8 +37,14 @@ function submitReschedule() {
     rescheduleForm.patch(route('appointments.reschedule', props.appointment.id));
 }
 
-function destroy() {
-    if (confirm('Cancel and remove this appointment entirely?')) {
+async function destroy() {
+    const confirmed = await confirmDialog({
+        title: 'Delete this appointment?',
+        message: 'Cancel and remove this appointment entirely?',
+        confirmLabel: 'Delete',
+        danger: true,
+    });
+    if (confirmed) {
         router.delete(route('appointments.destroy', props.appointment.id));
     }
 }

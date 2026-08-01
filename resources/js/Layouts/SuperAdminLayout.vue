@@ -2,6 +2,7 @@
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     BuildingStorefrontIcon,
+    ChatBubbleLeftRightIcon,
     ClockIcon,
     CurrencyRupeeIcon,
     ListBulletIcon,
@@ -13,6 +14,7 @@ import {
     SunIcon,
     UsersIcon,
 } from '@heroicons/vue/24/outline';
+import { computed } from 'vue';
 import { useTheme } from '../Composables/useTheme';
 import { useAuthStore } from '../Stores/auth';
 
@@ -22,11 +24,14 @@ const { isDark, toggleTheme } = useTheme();
 
 authStore.syncFromPage(page.props);
 
+const openSupportTicketsCount = computed(() => page.props.openSupportTicketsCount ?? 0);
+
 const navigation = [
     { name: 'Dashboard', href: route('admin.dashboard'), icon: Squares2X2Icon, matches: 'admin.dashboard' },
     { name: 'Spas', href: route('admin.spas.index'), icon: BuildingStorefrontIcon, matches: 'admin.spas.*' },
     { name: 'Payments', href: route('admin.payments.index'), icon: CurrencyRupeeIcon, matches: 'admin.payments.*' },
     { name: 'Pending Payments', href: route('admin.pending-payments.index'), icon: ClockIcon, matches: 'admin.pending-payments.*' },
+    { name: 'Support Tickets', href: route('admin.support-tickets.index'), icon: ChatBubbleLeftRightIcon, matches: 'admin.support-tickets.*' },
     { name: 'Admins', href: route('admin.admins.index'), icon: UsersIcon, matches: 'admin.admins.*' },
     { name: 'Activity Log', href: route('admin.activity.index'), icon: ListBulletIcon, matches: 'admin.activity.*' },
     { name: 'Announcements', href: route('admin.announcements.index'), icon: MegaphoneIcon, matches: 'admin.announcements.*' },
@@ -55,6 +60,12 @@ const navigation = [
                     />
                     <component :is="item.icon" class="h-5 w-5" />
                     {{ item.name }}
+                    <span
+                        v-if="item.name === 'Support Tickets' && openSupportTicketsCount > 0"
+                        class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-semibold text-white"
+                    >
+                        {{ openSupportTicketsCount }}
+                    </span>
                 </Link>
 
                 <a

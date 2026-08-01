@@ -6,6 +6,7 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
 class RoleBasedRedirectTest extends TestCase
@@ -54,5 +55,39 @@ class RoleBasedRedirectTest extends TestCase
         $response = $this->post('/login', ['email' => $owner->email, 'password' => 'password123']);
 
         $response->assertRedirect(route('spa.profile.show'));
+    }
+
+    public function test_super_admin_lands_on_the_admin_dashboard_after_confirming_their_password(): void
+    {
+        // Fortify's own PasswordConfirmedResponse falls back to config('fortify.home')
+        // ('/dashboard') when there's no stashed "intended" URL — exactly what happens when a
+        // super admin navigates straight to a password-confirmation-gated page (e.g. the
+        // two-factor setup screen) rather than being bounced there from somewhere else.
+        $admin = User::factory()->create(['password' => Hash::make('password123')]);
+        $admin->assignRole('super_admin');
+
+        $response = $this->actingAs($admin)->post('/user/confirm-password', ['password' => 'password123']);
+
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_super_admin_lands_on_the_admin_dashboard_after_the_two_factor_challenge(): void
+    {
+        $google2fa = new Google2FA;
+        $secret = $google2fa->generateSecretKey();
+
+        $admin = User::factory()->create([
+            'password' => Hash::make('password123'),
+            'two_factor_secret' => encrypt($secret),
+            'two_factor_confirmed_at' => now(),
+        ]);
+        $admin->assignRole('super_admin');
+
+        $this->post('/login', ['email' => $admin->email, 'password' => 'password123'])
+            ->assertRedirect(route('two-factor.login'));
+
+        $response = $this->post('/two-factor-challenge', ['code' => $google2fa->getCurrentOtp($secret)]);
+
+        $response->assertRedirect(route('admin.dashboard'));
     }
 }

@@ -2,14 +2,45 @@
 
 namespace App\Domain\Subscriptions\Services;
 
+use App\Domain\Tenancy\Models\Spa;
 use Razorpay\Api\Api;
 use Razorpay\Api\Errors\SignatureVerificationError;
 
+/**
+ * Two distinct Razorpay accounts exist in this app: the platform's own (subscription
+ * revenue) and each spa's own (their customers' invoice payments). Callers must be
+ * explicit about which one they mean via platform()/forSpa() — there is no ambient
+ * "default" credential source.
+ */
 class RazorpayGateway
 {
+    public function __construct(
+        private readonly ?string $keyId = null,
+        private readonly ?string $keySecret = null,
+        private readonly ?string $webhookSecret = null,
+    ) {}
+
+    public static function platform(): self
+    {
+        return new self(
+            config('services.razorpay.key_id'),
+            config('services.razorpay.key_secret'),
+            config('services.razorpay.webhook_secret'),
+        );
+    }
+
+    public static function forSpa(Spa $spa): self
+    {
+        return new self(
+            $spa->razorpay_key_id,
+            $spa->razorpay_key_secret,
+            $spa->razorpay_webhook_secret,
+        );
+    }
+
     public function isConfigured(): bool
     {
-        return filled(config('services.razorpay.key_id')) && filled(config('services.razorpay.key_secret'));
+        return filled($this->keyId) && filled($this->keySecret);
     }
 
     /**
@@ -47,7 +78,7 @@ class RazorpayGateway
             $this->api()->utility->verifyWebhookSignature(
                 $payload,
                 $signature,
-                (string) config('services.razorpay.webhook_secret'),
+                (string) $this->webhookSecret,
             );
 
             return true;
@@ -58,6 +89,6 @@ class RazorpayGateway
 
     private function api(): Api
     {
-        return new Api(config('services.razorpay.key_id'), config('services.razorpay.key_secret'));
+        return new Api($this->keyId, $this->keySecret);
     }
 }

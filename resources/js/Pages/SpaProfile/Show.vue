@@ -1,14 +1,21 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import BaseInput from '../../Components/Ui/BaseInput.vue';
+import { useConfirm } from '../../Composables/useConfirm';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
 
+const { confirmDialog } = useConfirm();
+
 const props = defineProps({
     spa: { type: Object, required: true },
+    razorpayKeyId: { type: String, default: null },
+    razorpayConfigured: { type: Boolean, required: true },
+    razorpayWebhookUrl: { type: String, required: true },
 });
 
 const form = useForm({
@@ -32,6 +39,42 @@ const form = useForm({
 
 function submit() {
     form.put('/spa/profile');
+}
+
+const paymentForm = useForm({
+    razorpay_key_id: props.razorpayKeyId,
+    razorpay_key_secret: '',
+    razorpay_webhook_secret: '',
+});
+
+function submitPaymentSettings() {
+    paymentForm.put('/spa/payment-settings', {
+        preserveScroll: true,
+        onSuccess: () => {
+            paymentForm.razorpay_key_secret = '';
+            paymentForm.razorpay_webhook_secret = '';
+        },
+    });
+}
+
+async function disconnectRazorpay() {
+    const confirmed = await confirmDialog({
+        title: 'Disconnect Razorpay?',
+        message: 'Your customer pay links will stop accepting online payments until you reconnect.',
+        confirmLabel: 'Disconnect',
+        danger: true,
+    });
+    if (!confirmed) return;
+
+    useForm({}).delete('/spa/payment-settings', { preserveScroll: true });
+}
+
+const webhookUrlCopied = ref(false);
+
+async function copyWebhookUrl() {
+    await navigator.clipboard.writeText(props.razorpayWebhookUrl);
+    webhookUrlCopied.value = true;
+    setTimeout(() => { webhookUrlCopied.value = false; }, 2000);
 }
 </script>
 
@@ -73,5 +116,49 @@ function submit() {
         </BaseCard>
 
         <BaseButton type="submit" :disabled="form.processing">Save changes</BaseButton>
+    </form>
+
+    <form class="mt-6" @submit.prevent="submitPaymentSettings">
+        <BaseCard title="Payment gateway">
+            <p class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+                Connect your own Razorpay account so customer invoice payments go straight to you — the platform never
+                sees or touches this money.
+            </p>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <BaseInput v-model="paymentForm.razorpay_key_id" label="Key ID" :error="paymentForm.errors.razorpay_key_id" />
+                <div />
+                <BaseInput
+                    v-model="paymentForm.razorpay_key_secret"
+                    type="password"
+                    label="Key Secret"
+                    :placeholder="razorpayConfigured ? 'Leave blank to keep your current secret' : ''"
+                    :error="paymentForm.errors.razorpay_key_secret"
+                />
+                <BaseInput
+                    v-model="paymentForm.razorpay_webhook_secret"
+                    type="password"
+                    label="Webhook Secret"
+                    :placeholder="razorpayConfigured ? 'Leave blank to keep your current secret' : ''"
+                    :error="paymentForm.errors.razorpay_webhook_secret"
+                />
+            </div>
+
+            <div class="mt-4">
+                <label class="form-label">Webhook URL</label>
+                <div class="flex gap-2">
+                    <input :value="razorpayWebhookUrl" readonly class="form-input flex-1 text-sm text-slate-500 dark:text-slate-400" />
+                    <BaseButton type="button" variant="secondary" @click="copyWebhookUrl">{{ webhookUrlCopied ? 'Copied!' : 'Copy' }}</BaseButton>
+                </div>
+                <p class="mt-1.5 text-xs text-slate-400">
+                    Paste this into your Razorpay Dashboard → Settings → Webhooks, with the "payment.captured" event enabled.
+                </p>
+            </div>
+
+            <div class="mt-4 flex items-center gap-3">
+                <BaseButton type="submit" :disabled="paymentForm.processing">Save Payment Settings</BaseButton>
+                <BaseButton v-if="razorpayConfigured" type="button" variant="danger" @click="disconnectRazorpay">Disconnect Razorpay</BaseButton>
+            </div>
+        </BaseCard>
     </form>
 </template>

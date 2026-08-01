@@ -19,6 +19,9 @@ class SpaProfileController extends Controller
 
         return Inertia::render('SpaProfile/Show', [
             'spa' => $spa,
+            'razorpayKeyId' => $spa->razorpay_key_id,
+            'razorpayConfigured' => filled($spa->razorpay_key_id) && filled($spa->razorpay_key_secret),
+            'razorpayWebhookUrl' => route('webhooks.razorpay.spa', $spa->razorpay_webhook_token),
         ]);
     }
 
@@ -50,5 +53,50 @@ class SpaProfileController extends Controller
         $spa->update($data);
 
         return back()->with('success', 'Spa profile updated.');
+    }
+
+    public function updatePaymentSettings(Request $request, TenantContext $tenantContext): RedirectResponse
+    {
+        $spa = $tenantContext->getCurrentSpa();
+
+        $this->authorize('update', $spa);
+
+        $data = $request->validate([
+            'razorpay_key_id' => ['nullable', 'string', 'max:255'],
+            'razorpay_key_secret' => ['nullable', 'string', 'max:255'],
+            'razorpay_webhook_secret' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        // Secrets never round-trip to the browser (Spa::$hidden), so the form fields are always
+        // blank on load — a blank submission means "leave the existing secret untouched," not
+        // "clear it." Only a non-empty value replaces what's already saved.
+        $updates = ['razorpay_key_id' => $data['razorpay_key_id'] ?? null];
+
+        if (filled($data['razorpay_key_secret'] ?? null)) {
+            $updates['razorpay_key_secret'] = $data['razorpay_key_secret'];
+        }
+
+        if (filled($data['razorpay_webhook_secret'] ?? null)) {
+            $updates['razorpay_webhook_secret'] = $data['razorpay_webhook_secret'];
+        }
+
+        $spa->update($updates);
+
+        return back()->with('success', 'Payment settings updated.');
+    }
+
+    public function disconnectPaymentSettings(TenantContext $tenantContext): RedirectResponse
+    {
+        $spa = $tenantContext->getCurrentSpa();
+
+        $this->authorize('update', $spa);
+
+        $spa->update([
+            'razorpay_key_id' => null,
+            'razorpay_key_secret' => null,
+            'razorpay_webhook_secret' => null,
+        ]);
+
+        return back()->with('success', 'Razorpay disconnected.');
     }
 }

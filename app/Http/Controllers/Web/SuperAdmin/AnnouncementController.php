@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,6 +24,7 @@ class AnnouncementController extends Controller
     {
         $data = $request->validate([
             'message' => ['required', 'string', 'max:500'],
+            'color' => ['nullable', Rule::in(Announcement::COLORS)],
         ]);
 
         DB::transaction(function () use ($data, $request) {
@@ -32,6 +34,7 @@ class AnnouncementController extends Controller
 
             Announcement::create([
                 'message' => $data['message'],
+                'color' => $data['color'] ?? 'indigo',
                 'is_active' => true,
                 'created_by_user_id' => $request->user()->id,
             ]);

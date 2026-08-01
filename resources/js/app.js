@@ -5,6 +5,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createPinia } from 'pinia';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import ConfirmDialog from './Components/ConfirmDialog.vue';
 import { useUiStore } from './Stores/ui';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Spa SaaS';
@@ -18,7 +19,7 @@ createInertiaApp({
         ),
     setup({ el, App, props, plugin }) {
         const pinia = createPinia();
-        const app = createApp({ render: () => h(App, props) })
+        const app = createApp({ render: () => [h(App, props), h(ConfirmDialog)] })
             .use(plugin)
             .use(pinia)
             .use(ZiggyVue);

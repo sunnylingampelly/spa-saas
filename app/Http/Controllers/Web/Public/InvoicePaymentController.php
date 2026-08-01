@@ -22,16 +22,20 @@ class InvoicePaymentController extends Controller
 {
     public function show(Invoice $invoice): Response
     {
+        $gateway = RazorpayGateway::forSpa($invoice->spa);
+
         return Inertia::render('Public/PayInvoice', [
             'invoice' => $invoice->load(['items.service']),
             'spaName' => $invoice->spa->name,
-            'razorpayEnabled' => app(RazorpayGateway::class)->isConfigured(),
-            'razorpayKeyId' => config('services.razorpay.key_id'),
+            'razorpayEnabled' => $gateway->isConfigured(),
+            'razorpayKeyId' => $invoice->spa->razorpay_key_id,
         ]);
     }
 
-    public function createOrder(Invoice $invoice, RazorpayGateway $gateway): JsonResponse
+    public function createOrder(Invoice $invoice): JsonResponse
     {
+        $gateway = RazorpayGateway::forSpa($invoice->spa);
+
         abort_unless($gateway->isConfigured(), 503, 'Online payments are not configured yet.');
 
         if (in_array($invoice->status, ['cancelled', 'refunded'], true)) {
@@ -57,15 +61,17 @@ class InvoicePaymentController extends Controller
         return response()->json([
             'order_id' => $order['id'],
             'amount' => $amountInPaise,
-            'key_id' => config('services.razorpay.key_id'),
+            'key_id' => $invoice->spa->razorpay_key_id,
             'intent_id' => $intent->id,
             'invoice_number' => $invoice->invoice_number,
             'spa_name' => $invoice->spa->name,
         ]);
     }
 
-    public function verify(Request $request, Invoice $invoice, RazorpayGateway $gateway, CompleteInvoicePaymentIntentAction $action): JsonResponse
+    public function verify(Request $request, Invoice $invoice, CompleteInvoicePaymentIntentAction $action): JsonResponse
     {
+        $gateway = RazorpayGateway::forSpa($invoice->spa);
+
         $data = $request->validate([
             'razorpay_order_id' => ['required', 'string'],
             'razorpay_payment_id' => ['required', 'string'],
