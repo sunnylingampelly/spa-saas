@@ -55,6 +55,41 @@ class Subscription extends Model
         };
     }
 
+    // Guards against paying for a plan the spa already effectively has: Lifetime never
+    // needs another payment, and renewing the *same* still-active plan far ahead of its
+    // expiry would just discard the time already paid for. A plan *change* (upgrade to
+    // Lifetime, or renewing within the window as it approaches expiry) is always allowed.
+    public function blockingReasonForPurchase(string $planCode): ?string
+    {
+        if ($this->status !== 'active') {
+            return null;
+        }
+
+        if ($this->plan_code === 'lifetime') {
+            return 'You already have lifetime access — no further payment is needed.';
+        }
+
+        if ($this->plan_code !== $planCode || $this->current_period_ends_at === null) {
+            return null;
+        }
+
+        if ($this->current_period_ends_at->isPast()) {
+            return null;
+        }
+
+        $renewalWindowDays = config('subscriptions.renewal_window_days');
+        $renewalOpensAt = $this->current_period_ends_at->copy()->subDays($renewalWindowDays);
+
+        if (now()->lt($renewalOpensAt)) {
+            $label = config("subscriptions.plans.{$planCode}.label", $planCode);
+            $expiryDate = $this->current_period_ends_at->format('d M Y');
+
+            return "Your {$label} plan is already active until {$expiryDate}. You can renew starting {$renewalWindowDays} days before it ends.";
+        }
+
+        return null;
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()->logAll()->logOnlyDirty()->dontSubmitEmptyLogs();

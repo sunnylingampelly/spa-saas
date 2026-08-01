@@ -18,21 +18,54 @@ class SubscriptionCheckoutController extends Controller
     {
         $gateway = RazorpayGateway::platform();
 
-        abort_unless($gateway->isConfigured(), 503, 'Online payments are not configured yet.');
+        // Plain abort()/HttpException rendering isn't reliably JSON on a web route (see
+        // bootstrap/app.php's shouldRenderJsonWhen, scoped to api/* paths) — this endpoint
+        // is called via axios expecting a JSON body either way, so return JSON explicitly.
+        if (! $gateway->isConfigured()) {
+            return response()->json(['message' => 'Online payments are not configured yet.'], 503);
+        }
 
         $planCode = $request->validate([
             'plan' => ['required', Rule::in(array_keys(config('subscriptions.plans')))],
         ])['plan'];
 
         $spa = $tenantContext->getCurrentSpa();
+        $subscription = $spa->subscription;
         $plan = config("subscriptions.plans.{$planCode}");
         $amountInPaise = $plan['price'] * 100;
+
+        if ($blockingReason = $subscription->blockingReasonForPurchase($planCode)) {
+            return response()->json(['message' => $blockingReason], 422);
+        }
+
+        // A double-click (or a checkout window left open and retried) must never open a
+        // second live Razorpay order for the same purchase — that's two real charge
+        // attempts for one thing. Reuse whatever's still pending and fresh instead of
+        // asking Razorpay for a new one.
+        $existingPending = SubscriptionPayment::where('subscription_id', $subscription->id)
+            ->where('plan_code', $planCode)
+            ->where('method', 'razorpay')
+            ->where('status', 'pending')
+            ->where('created_at', '>=', now()->subMinutes(30))
+            ->latest()
+            ->first();
+
+        if ($existingPending) {
+            return response()->json([
+                'order_id' => $existingPending->razorpay_order_id,
+                'amount' => $amountInPaise,
+                'key_id' => config('services.razorpay.key_id'),
+                'payment_id' => $existingPending->id,
+                'spa_name' => $spa->name,
+                'plan_label' => $plan['label'],
+            ]);
+        }
 
         $order = $gateway->createOrder($amountInPaise, "spa-{$spa->id}-{$planCode}-".now()->timestamp);
 
         $payment = SubscriptionPayment::create([
             'spa_id' => $spa->id,
-            'subscription_id' => $spa->subscription->id,
+            'subscription_id' => $subscription->id,
             'plan_code' => $planCode,
             'method' => 'razorpay',
             'status' => 'pending',
@@ -91,7 +124,12 @@ class SubscriptionCheckoutController extends Controller
         ]);
 
         $spa = $tenantContext->getCurrentSpa();
+        $subscription = $spa->subscription;
         $plan = config("subscriptions.plans.{$data['plan']}");
+
+        if ($blockingReason = $subscription->blockingReasonForPurchase($data['plan'])) {
+            throw ValidationException::withMessages(['plan' => $blockingReason]);
+        }
 
         $alreadyPending = SubscriptionPayment::where('subscription_id', $spa->subscription->id)
             ->where('plan_code', $data['plan'])

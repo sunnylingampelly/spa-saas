@@ -20,6 +20,7 @@ const props = defineProps({
     razorpayEnabled: { type: Boolean, required: true },
     razorpayKeyId: { type: String, default: null },
     pendingManualPlanCodes: { type: Array, default: () => [] },
+    renewalWindowDays: { type: Number, required: true },
 });
 
 const rupees = (value) => `₹${Number(value).toLocaleString('en-IN')}`;
@@ -35,6 +36,22 @@ const statusBadge = computed(() => {
 });
 
 const paymentStatusBadge = { pending: 'amber', paid: 'green', failed: 'rose', refunded: 'slate' };
+
+// Mirrors the backend's Subscription::blockingReasonForPurchase() so the right control
+// (Pay / Renew / nothing) shows up front — the backend guard is still the real enforcement.
+function planState(code) {
+    if (props.subscription.status !== 'active') return 'purchasable';
+    if (props.subscription.plan_code === 'lifetime') return 'covered-by-lifetime';
+    if (props.subscription.plan_code !== code) return 'purchasable';
+
+    const expiresAt = props.subscription.current_period_ends_at;
+    if (!expiresAt) return 'purchasable';
+
+    const daysRemaining = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86_400_000);
+    if (daysRemaining <= 0) return 'purchasable';
+
+    return daysRemaining <= props.renewalWindowDays ? 'active-renewable' : 'active-locked';
+}
 
 const razorpayLoading = ref(null);
 const manualFormOpenFor = ref(null);
@@ -147,52 +164,63 @@ function submitManual(planCode) {
                 <span class="text-base font-normal text-slate-400">{{ plan.cycle === 'monthly' ? '/month' : ' one-time' }}</span>
             </p>
 
-            <BaseButton
-                v-if="razorpayEnabled"
-                class="mt-4 w-full"
-                :disabled="razorpayLoading === code"
-                @click="payOnline(code)"
-            >
-                {{ razorpayLoading === code ? 'Opening…' : 'Pay online (Card / UPI / Netbanking)' }}
-            </BaseButton>
-            <p v-if="errorPlanCode === code" class="mt-2 text-center text-sm text-rose-600 dark:text-rose-400">
-                {{ errorMessage }}
-            </p>
-            <p v-if="!razorpayEnabled" class="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                Online payment isn't set up yet — use UPI / bank transfer below.
+            <p v-if="planState(code) === 'covered-by-lifetime'" class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
+                You have lifetime access — no further payment is ever needed.
             </p>
 
-            <p v-if="pendingManualPlanCodes.includes(code)" class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
-                Your UPI / bank transfer payment is awaiting confirmation from the SpaOrbit team.
+            <p v-else-if="planState(code) === 'active-locked'" class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
+                Active until {{ formatDate(subscription.current_period_ends_at) }}. You can renew starting {{ renewalWindowDays }} days before it ends.
             </p>
 
             <template v-else>
-                <button
-                    class="mt-3 w-full text-sm font-medium text-brand-600 hover:text-brand-700"
-                    @click="manualFormOpenFor = manualFormOpenFor === code ? null : code"
+                <BaseButton
+                    v-if="razorpayEnabled"
+                    class="mt-4 w-full"
+                    :disabled="razorpayLoading === code"
+                    @click="payOnline(code)"
                 >
-                    {{ manualFormOpenFor === code ? 'Hide UPI / bank transfer details' : 'Pay via UPI / bank transfer instead' }}
-                </button>
+                    {{ razorpayLoading === code ? 'Opening…' : (planState(code) === 'active-renewable' ? 'Renew online (Card / UPI / Netbanking)' : 'Pay online (Card / UPI / Netbanking)') }}
+                </BaseButton>
+                <p v-if="errorPlanCode === code" class="mt-2 text-center text-sm text-rose-600 dark:text-rose-400">
+                    {{ errorMessage }}
+                </p>
+                <p v-if="!razorpayEnabled" class="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                    Online payment isn't set up yet — use UPI / bank transfer below.
+                </p>
 
-                <div v-if="manualFormOpenFor === code" class="mt-4 space-y-4 rounded-xl border border-slate-100 p-4 dark:border-slate-800">
-                    <div class="flex items-center gap-4">
-                        <div class="rounded-xl bg-white p-2" v-html="payoutQrSvgs[code]" />
-                        <div class="text-sm">
-                            <p class="text-slate-500 dark:text-slate-400">UPI ID</p>
-                            <p class="font-medium text-slate-900 dark:text-white">{{ payout.upi_id }}</p>
-                            <p class="mt-2 text-slate-500 dark:text-slate-400">Account name</p>
-                            <p class="font-medium text-slate-900 dark:text-white">{{ payout.account_name }}</p>
+                <p v-if="pendingManualPlanCodes.includes(code)" class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                    Your UPI / bank transfer payment is awaiting confirmation from the SpaOrbit team.
+                </p>
+
+                <template v-else>
+                    <button
+                        class="mt-3 w-full text-sm font-medium text-brand-600 hover:text-brand-700"
+                        @click="manualFormOpenFor = manualFormOpenFor === code ? null : code"
+                    >
+                        {{ manualFormOpenFor === code ? 'Hide UPI / bank transfer details' : 'Pay via UPI / bank transfer instead' }}
+                    </button>
+
+                    <div v-if="manualFormOpenFor === code" class="mt-4 space-y-4 rounded-xl border border-slate-100 p-4 dark:border-slate-800">
+                        <div class="flex items-center gap-4">
+                            <div class="rounded-xl bg-white p-2" v-html="payoutQrSvgs[code]" />
+                            <div class="text-sm">
+                                <p class="text-slate-500 dark:text-slate-400">UPI ID</p>
+                                <p class="font-medium text-slate-900 dark:text-white">{{ payout.upi_id }}</p>
+                                <p class="mt-2 text-slate-500 dark:text-slate-400">Account name</p>
+                                <p class="font-medium text-slate-900 dark:text-white">{{ payout.account_name }}</p>
+                            </div>
                         </div>
+                        <BaseTextarea
+                            v-model="manualForm.proof_note"
+                            label="Reference / note (optional)"
+                            placeholder="e.g. UPI transaction ID"
+                        />
+                        <p v-if="manualForm.errors.plan" class="text-sm text-rose-600 dark:text-rose-400">{{ manualForm.errors.plan }}</p>
+                        <BaseButton variant="secondary" class="w-full" :disabled="manualForm.processing" @click="submitManual(code)">
+                            I've made the payment
+                        </BaseButton>
                     </div>
-                    <BaseTextarea
-                        v-model="manualForm.proof_note"
-                        label="Reference / note (optional)"
-                        placeholder="e.g. UPI transaction ID"
-                    />
-                    <BaseButton variant="secondary" class="w-full" :disabled="manualForm.processing" @click="submitManual(code)">
-                        I've made the payment
-                    </BaseButton>
-                </div>
+                </template>
             </template>
         </BaseCard>
     </div>

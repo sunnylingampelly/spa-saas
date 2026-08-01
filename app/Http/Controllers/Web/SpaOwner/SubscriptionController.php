@@ -34,6 +34,7 @@ class SubscriptionController extends Controller
             'razorpayEnabled' => $gateway->isConfigured(),
             'razorpayKeyId' => config('services.razorpay.key_id'),
             'pendingManualPlanCodes' => $pendingManualPlanCodes,
+            'renewalWindowDays' => config('subscriptions.renewal_window_days'),
         ]);
     }
 }
