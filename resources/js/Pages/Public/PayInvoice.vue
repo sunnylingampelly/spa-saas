@@ -16,12 +16,24 @@ const rupees = (value) => `₹${Number(value).toLocaleString('en-IN')}`;
 const paying = ref(false);
 const paid = ref(props.invoice.balance_amount <= 0);
 const errorMessage = ref(null);
+let razorpayScriptReady = null;
+
+function loadRazorpayScript() {
+    if (!razorpayScriptReady) {
+        razorpayScriptReady = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Could not reach the Razorpay checkout script.'));
+            document.head.appendChild(script);
+        });
+    }
+    return razorpayScriptReady;
+}
 
 onMounted(() => {
     if (props.razorpayEnabled) {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        document.head.appendChild(script);
+        loadRazorpayScript();
     }
 });
 
@@ -30,7 +42,10 @@ async function payOnline() {
     errorMessage.value = null;
 
     try {
-        const { data } = await axios.post(route('public.invoices.razorpay.order', props.invoice.public_token));
+        const [{ data }] = await Promise.all([
+            axios.post(route('public.invoices.razorpay.order', props.invoice.public_token)),
+            loadRazorpayScript(),
+        ]);
 
         const rzp = new window.Razorpay({
             key: data.key_id,

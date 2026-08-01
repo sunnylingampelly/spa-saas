@@ -38,20 +38,39 @@ const paymentStatusBadge = { pending: 'amber', paid: 'green', failed: 'rose', re
 
 const razorpayLoading = ref(null);
 const manualFormOpenFor = ref(null);
+const errorMessage = ref(null);
+const errorPlanCode = ref(null);
+let razorpayScriptReady = null;
+
+function loadRazorpayScript() {
+    if (!razorpayScriptReady) {
+        razorpayScriptReady = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Could not reach the Razorpay checkout script.'));
+            document.head.appendChild(script);
+        });
+    }
+    return razorpayScriptReady;
+}
 
 onMounted(() => {
     if (props.razorpayEnabled) {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        document.head.appendChild(script);
+        loadRazorpayScript();
     }
 });
 
 async function payOnline(planCode) {
     razorpayLoading.value = planCode;
+    errorMessage.value = null;
+    errorPlanCode.value = null;
 
     try {
-        const { data } = await axios.post(route('subscription.razorpay.order'), { plan: planCode });
+        const [{ data }] = await Promise.all([
+            axios.post(route('subscription.razorpay.order'), { plan: planCode }),
+            loadRazorpayScript(),
+        ]);
 
         const rzp = new window.Razorpay({
             key: data.key_id,
@@ -67,6 +86,9 @@ async function payOnline(planCode) {
             modal: { ondismiss: () => { razorpayLoading.value = null; } },
         });
         rzp.open();
+    } catch (e) {
+        errorMessage.value = e.response?.data?.message ?? e.message ?? 'Something went wrong — please try again.';
+        errorPlanCode.value = planCode;
     } finally {
         razorpayLoading.value = null;
     }
@@ -133,7 +155,10 @@ function submitManual(planCode) {
             >
                 {{ razorpayLoading === code ? 'Opening…' : 'Pay online (Card / UPI / Netbanking)' }}
             </BaseButton>
-            <p v-else class="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+            <p v-if="errorPlanCode === code" class="mt-2 text-center text-sm text-rose-600 dark:text-rose-400">
+                {{ errorMessage }}
+            </p>
+            <p v-if="!razorpayEnabled" class="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                 Online payment isn't set up yet — use UPI / bank transfer below.
             </p>
 
