@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-    <title inertia>{{ config('app.name', 'Spa SaaS') }}</title>
+    <title inertia>{{ config('app.name', 'SpaOrbit') }}</title>
 
     <script @if(isset($cspNonce)) nonce="{{ $cspNonce }}" @endif>
         if (localStorage.getItem('theme') === 'dark' ||

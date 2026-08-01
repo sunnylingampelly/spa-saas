@@ -39,7 +39,10 @@ Route::get('/', function () {
         return redirect()->route(auth()->user()->hasRole('super_admin') ? 'admin.dashboard' : 'dashboard');
     }
 
-    return Inertia::render('Marketing/Landing');
+    return Inertia::render('Marketing/Landing', [
+        'plans' => config('subscriptions.plans'),
+        'trialDays' => config('subscriptions.trial_days'),
+    ]);
 })->name('home');
 
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');

@@ -8,7 +8,7 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import ConfirmDialog from './Components/ConfirmDialog.vue';
 import { useUiStore } from './Stores/ui';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Spa SaaS';
+const appName = import.meta.env.VITE_APP_NAME || 'SpaOrbit';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

@@ -73,7 +73,7 @@ function submit() {
                 >
                     <p class="whitespace-pre-wrap">{{ message.body }}</p>
                     <p class="mt-1 text-xs opacity-70">
-                        {{ message.is_from_admin ? 'SpaSaaS Support' : (message.author?.name ?? ticket.creator?.name) }} ·
+                        {{ message.is_from_admin ? 'SpaOrbit Support' : (message.author?.name ?? ticket.creator?.name) }} ·
                         {{ formatDate(message.created_at, { withTime: true }) }}
                     </p>
                 </div>

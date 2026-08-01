@@ -10,7 +10,7 @@ class SuperAdminSeeder extends Seeder
     public function run(): void
     {
         $admin = User::firstOrCreate(
-            ['email' => 'admin@spasaas.local'],
+            ['email' => 'admin@spaorbit.local'],
             [
                 'name' => 'Platform Super Admin',
                 'password' => bcrypt('password'),

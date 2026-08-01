@@ -26,7 +26,7 @@ const statusBadge = {
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">Support</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Questions or issues? Message the SpaSaaS team directly.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Questions or issues? Message the SpaOrbit team directly.</p>
         </div>
         <Link :href="route('support.tickets.create')"><BaseButton>New Ticket</BaseButton></Link>
     </div>

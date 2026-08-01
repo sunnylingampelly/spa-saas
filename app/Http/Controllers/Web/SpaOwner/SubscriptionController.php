@@ -24,7 +24,7 @@ class SubscriptionController extends Controller
             'plans' => $plans,
             'payout' => config('subscriptions.payout'),
             'payoutQrSvgs' => collect($plans)->mapWithKeys(fn ($plan, $code) => [
-                $code => $qrCodeService->svgForAmount($plan['price'], "SpaSaaS {$plan['label']} - {$spa->name}"),
+                $code => $qrCodeService->svgForAmount($plan['price'], "SpaOrbit {$plan['label']} - {$spa->name}"),
             ]),
             'razorpayEnabled' => $gateway->isConfigured(),
             'razorpayKeyId' => config('services.razorpay.key_id'),

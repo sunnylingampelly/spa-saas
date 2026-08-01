@@ -47,7 +47,7 @@ const included = [
             <p class="mt-2 text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">
                 {{ rupees(plans.lifetime.price) }}<span class="text-base font-normal text-slate-400"> one-time</span>
             </p>
-            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Pay once, use SpaSaaS for as long as your spa runs.</p>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Pay once, use SpaOrbit for as long as your spa runs.</p>
             <Link :href="route('register')" class="btn-primary mt-6 w-full">Start free trial</Link>
         </div>
     </section>

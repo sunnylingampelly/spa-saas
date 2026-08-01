@@ -233,7 +233,7 @@ onMounted(() => {
         >
             <div class="flex h-16 items-center gap-2 px-6">
                 <span class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
-                    Spa<span class="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">SaaS</span>
+                    Spa<span class="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">Orbit</span>
                 </span>
             </div>
 

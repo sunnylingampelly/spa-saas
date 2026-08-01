@@ -17,7 +17,7 @@ const { isDark, toggleTheme } = useTheme();
         <header class="relative z-10">
             <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
                 <Link href="/" class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
-                    Spa<span class="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">SaaS</span>
+                    Spa<span class="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">Orbit</span>
                 </Link>
 
                 <nav class="flex items-center gap-2 sm:gap-4">
@@ -40,7 +40,7 @@ const { isDark, toggleTheme } = useTheme();
 
         <footer class="relative z-10 mx-auto max-w-6xl px-6 py-10 text-sm text-slate-400 dark:text-slate-500">
             <div class="flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-6 dark:border-slate-800 sm:flex-row">
-                <span>© {{ new Date().getFullYear() }} SpaSaaS. Built for Indian wellness spas.</span>
+                <span>© {{ new Date().getFullYear() }} SpaOrbit. Built for Indian wellness spas.</span>
                 <div class="flex gap-4">
                     <Link :href="route('pricing')" class="hover:text-slate-600 dark:hover:text-slate-300">Pricing</Link>
                     <Link :href="route('login')" class="hover:text-slate-600 dark:hover:text-slate-300">Log in</Link>

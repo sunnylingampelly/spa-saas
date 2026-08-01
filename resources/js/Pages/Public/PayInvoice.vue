@@ -109,7 +109,7 @@ async function payOnline() {
             </div>
 
             <p class="mt-6 text-center text-xs text-slate-400">
-                Powered by Spa<span class="font-medium">SaaS</span>
+                Powered by Spa<span class="font-medium">Orbit</span>
             </p>
         </div>
     </div>

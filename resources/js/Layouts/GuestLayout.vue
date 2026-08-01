@@ -26,7 +26,7 @@ const { isDark, toggleTheme } = useTheme();
         <div class="relative z-10 w-full max-w-md">
             <div class="mb-8 text-center">
                 <Link href="/" class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
-                    Spa<span class="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">SaaS</span>
+                    Spa<span class="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">Orbit</span>
                 </Link>
             </div>
 

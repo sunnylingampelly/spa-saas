@@ -57,7 +57,7 @@ async function payOnline(planCode) {
             order_id: data.order_id,
             amount: data.amount,
             currency: 'INR',
-            name: 'SpaSaaS',
+            name: 'SpaOrbit',
             description: `${data.plan_label} plan — ${data.spa_name}`,
             handler: async (response) => {
                 await axios.post(route('subscription.razorpay.verify'), response);
@@ -91,7 +91,7 @@ function submitManual(planCode) {
     <div class="mb-6 flex items-center justify-between">
         <div>
             <h1 class="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">Subscription</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Manage your SpaSaaS plan and payments.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Manage your SpaOrbit plan and payments.</p>
         </div>
         <BaseBadge :color="statusBadge.color">{{ statusBadge.label }}</BaseBadge>
     </div>
