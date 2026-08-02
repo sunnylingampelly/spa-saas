@@ -8,6 +8,7 @@ use App\Domain\Employees\Models\Employee;
 use App\Domain\Impersonation\Actions\StartImpersonationAction;
 use App\Domain\Impersonation\Models\Impersonation;
 use App\Domain\Subscriptions\Actions\AdminUpdateSubscriptionAction;
+use App\Domain\Tenancy\Actions\ExportSpasAction;
 use App\Domain\Tenancy\Models\Spa;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SpaController extends Controller
 {
@@ -38,6 +40,11 @@ class SpaController extends Controller
             'spas' => $spas,
             'filters' => ['search' => $search],
         ]);
+    }
+
+    public function export(Request $request, ExportSpasAction $action): StreamedResponse
+    {
+        return $action->execute($request->string('search')->toString() ?: null);
     }
 
     public function show(Spa $spa): Response

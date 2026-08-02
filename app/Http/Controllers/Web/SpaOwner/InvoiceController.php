@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\SpaOwner;
 use App\Domain\Appointments\Models\Appointment;
 use App\Domain\Billing\Actions\CancelInvoiceAction;
 use App\Domain\Billing\Actions\CreateInvoiceAction;
+use App\Domain\Billing\Actions\ExportInvoicesAction;
 use App\Domain\Billing\DTOs\CreateInvoiceData;
 use App\Domain\Billing\DTOs\InvoiceItemData;
 use App\Domain\Billing\Models\Invoice;
@@ -16,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
 {
@@ -104,6 +106,11 @@ class InvoiceController extends Controller
         $action->execute($invoice, $data['reason'] ?? null);
 
         return back()->with('success', 'Invoice cancelled.');
+    }
+
+    public function export(Request $request, ExportInvoicesAction $action): StreamedResponse
+    {
+        return $action->execute($request->string('status')->toString() ?: null);
     }
 
     private function formOptions(): array

@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { PlusIcon } from '@heroicons/vue/24/outline';
+import { ArrowDownTrayIcon, PlusIcon } from '@heroicons/vue/24/outline';
 import BaseBadge from '../../Components/Ui/BaseBadge.vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
@@ -60,6 +60,9 @@ const columns = [
                 placeholder="All statuses"
                 @update:model-value="filterByStatus"
             />
+            <a :href="route('invoices.export', { status: filters.status })">
+                <BaseButton variant="secondary"><ArrowDownTrayIcon class="h-4 w-4" /> Export</BaseButton>
+            </a>
             <Link :href="route('invoices.create')">
                 <BaseButton><PlusIcon class="h-4 w-4" /> New Bill</BaseButton>
             </Link>

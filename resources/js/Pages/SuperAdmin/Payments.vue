@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
+import { ArrowDownTrayIcon } from '@heroicons/vue/24/outline';
 import BaseBadge from '../../Components/Ui/BaseBadge.vue';
+import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import BaseListbox from '../../Components/Ui/BaseListbox.vue';
 import { formatDate } from '../../Composables/useDateFormat.js';
@@ -34,13 +36,18 @@ const rupees = (value) => `₹${Number(value).toLocaleString('en-IN')}`;
 
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">Payments</h1>
-        <BaseListbox
-            :model-value="filters.status"
-            class="w-44"
-            :options="statusOptions"
-            placeholder="All statuses"
-            @update:model-value="filterByStatus"
-        />
+        <div class="flex items-center gap-3">
+            <BaseListbox
+                :model-value="filters.status"
+                class="w-44"
+                :options="statusOptions"
+                placeholder="All statuses"
+                @update:model-value="filterByStatus"
+            />
+            <a :href="route('admin.payments.export', { status: filters.status })">
+                <BaseButton variant="secondary"><ArrowDownTrayIcon class="h-4 w-4" /> Export</BaseButton>
+            </a>
+        </div>
     </div>
 
     <BaseCard>

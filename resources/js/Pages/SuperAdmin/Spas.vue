@@ -1,8 +1,9 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
+import { ArrowDownTrayIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import BaseBadge from '../../Components/Ui/BaseBadge.vue';
+import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import { formatDate } from '../../Composables/useDateFormat.js';
 import SuperAdminLayout from '../../Layouts/SuperAdminLayout.vue';
@@ -33,15 +34,20 @@ const statusBadge = {
 
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">Spas</h1>
-        <div class="relative">
-            <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-                v-model="search"
-                type="text"
-                placeholder="Search spa or owner…"
-                class="form-input w-64 pl-9"
-                @keyup.enter="runSearch"
-            />
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                    v-model="search"
+                    type="text"
+                    placeholder="Search spa or owner…"
+                    class="form-input w-64 pl-9"
+                    @keyup.enter="runSearch"
+                />
+            </div>
+            <a :href="route('admin.spas.export', { search })">
+                <BaseButton variant="secondary"><ArrowDownTrayIcon class="h-4 w-4" /> Export</BaseButton>
+            </a>
         </div>
     </div>
 

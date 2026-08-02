@@ -1,9 +1,10 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/vue/24/outline';
+import { ArrowDownTrayIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import BaseBadge from '../../Components/Ui/BaseBadge.vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
+import ImportSpreadsheetModal from '../../Components/Ui/ImportSpreadsheetModal.vue';
 import { formatDate } from '../../Composables/useDateFormat.js';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
 
@@ -37,6 +38,14 @@ function runSearch() {
                     @keyup.enter="runSearch"
                 />
             </div>
+            <a :href="route('customers.export', { search })">
+                <BaseButton variant="secondary"><ArrowDownTrayIcon class="h-4 w-4" /> Export</BaseButton>
+            </a>
+            <ImportSpreadsheetModal
+                label="customers"
+                import-route="customers.import"
+                import-template-route="customers.import-template"
+            />
             <Link :href="route('customers.create')">
                 <BaseButton><PlusIcon class="h-4 w-4" /> Add Customer</BaseButton>
             </Link>

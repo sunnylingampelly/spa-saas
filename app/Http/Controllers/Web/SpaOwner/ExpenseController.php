@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web\SpaOwner;
 
 use App\Domain\Expenses\Actions\CreateExpenseAction;
 use App\Domain\Expenses\Actions\DeleteExpenseAction;
+use App\Domain\Expenses\Actions\ExportExpensesAction;
+use App\Domain\Expenses\Actions\ImportExpensesAction;
 use App\Domain\Expenses\Actions\UpdateExpenseAction;
 use App\Domain\Expenses\DTOs\CreateExpenseData;
 use App\Domain\Expenses\Models\Expense;
@@ -12,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExpenseController extends Controller
 {
@@ -68,13 +71,29 @@ class ExpenseController extends Controller
         return back()->with('success', 'Expense removed.');
     }
 
+    public function export(ExportExpensesAction $action): StreamedResponse
+    {
+        return $action->execute();
+    }
+
+    public function importTemplate(ExportExpensesAction $action): StreamedResponse
+    {
+        return $action->template();
+    }
+
+    public function import(Request $request, ImportExpensesAction $action): RedirectResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
+
+        $result = $action->execute($request->file('file'), $request->user()->id);
+
+        return back()
+            ->with('success', "Imported {$result->importedCount} expense(s).")
+            ->with('import_errors', $result->rowErrors);
+    }
+
     private function validated(Request $request): array
     {
-        return $request->validate([
-            'category' => ['required', 'string', 'in:'.implode(',', Expense::CATEGORIES)],
-            'amount' => ['required', 'numeric', 'min:0.01'],
-            'expense_date' => ['required', 'date'],
-            'notes' => ['nullable', 'string'],
-        ]);
+        return $request->validate(ImportExpensesAction::validationRules());
     }
 }

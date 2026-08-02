@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web\SpaOwner;
 
 use App\Domain\Employees\Actions\CreateEmployeeAction;
 use App\Domain\Employees\Actions\DeleteEmployeeAction;
+use App\Domain\Employees\Actions\ExportEmployeesAction;
+use App\Domain\Employees\Actions\ImportEmployeesAction;
 use App\Domain\Employees\Actions\ToggleEmployeeStatusAction;
 use App\Domain\Employees\Actions\UpdateEmployeeAction;
 use App\Domain\Employees\DTOs\CreateEmployeeData;
@@ -14,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmployeeController extends Controller
 {
@@ -109,32 +112,35 @@ class EmployeeController extends Controller
         return back()->with('success', 'Employee status updated.');
     }
 
+    public function export(ExportEmployeesAction $action): StreamedResponse
+    {
+        return $action->execute();
+    }
+
+    public function importTemplate(ExportEmployeesAction $action): StreamedResponse
+    {
+        return $action->template();
+    }
+
+    public function import(Request $request, ImportEmployeesAction $action): RedirectResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
+
+        $result = $action->execute($request->file('file'));
+
+        return back()
+            ->with('success', "Imported {$result->importedCount} employee(s).")
+            ->with('import_errors', $result->rowErrors);
+    }
+
     private function validated(Request $request): array
     {
         return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'gender' => ['nullable', 'in:male,female,other'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'address_line_1' => ['nullable', 'string', 'max:255'],
-            'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'pincode' => ['nullable', 'string', 'max:10'],
-            'emergency_contact_name' => ['nullable', 'string', 'max:255'],
-            'emergency_contact_phone' => ['nullable', 'string', 'max:20'],
-            'joining_date' => ['nullable', 'date'],
-            'department' => ['nullable', 'string', 'max:255'],
-            'designation' => ['nullable', 'string', 'max:255'],
-            'salary' => ['nullable', 'numeric', 'min:0'],
-            'commission_type' => ['nullable', 'in:percentage,flat'],
-            'commission_value' => ['nullable', 'numeric', 'min:0'],
-            'experience_years' => ['nullable', 'integer', 'min:0'],
+            ...ImportEmployeesAction::validationRules(),
             'skills' => ['nullable', 'array'],
             'specializations' => ['nullable', 'array'],
             'performance_rating' => ['nullable', 'integer', 'min:1', 'max:5'],
             'performance_notes' => ['nullable', 'string'],
-            'notes' => ['nullable', 'string'],
         ]);
     }
 }

@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/vue/24/outline';
+import { ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/vue/24/outline';
 import BaseBadge from '../../Components/Ui/BaseBadge.vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
@@ -68,6 +68,9 @@ function setStatus(appointment, status) {
             <button class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" @click="shiftDay(1)">
                 <ChevronRightIcon class="h-5 w-5" />
             </button>
+            <a :href="route('appointments.export', { date })">
+                <BaseButton variant="secondary" class="ml-2"><ArrowDownTrayIcon class="h-4 w-4" /> Export</BaseButton>
+            </a>
             <Link :href="route('appointments.create', { date })">
                 <BaseButton class="ml-2"><PlusIcon class="h-4 w-4" /> Book Appointment</BaseButton>
             </Link>

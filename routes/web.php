@@ -118,26 +118,45 @@ Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'throttle:120,1'])->
 Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'subscription.active', 'throttle:120,1'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
 
+    // Must come before the resource route below — otherwise these are swallowed as an {employee} id.
+    Route::get('/employees/export', [EmployeeController::class, 'export'])->name('employees.export');
+    Route::get('/employees/import-template', [EmployeeController::class, 'importTemplate'])->name('employees.import-template');
+    Route::post('/employees/import', [EmployeeController::class, 'import'])->name('employees.import');
+
     Route::resource('employees', EmployeeController::class);
     Route::patch('/employees/{employee}/status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
     Route::post('/employees/attendance', [EmployeeAttendanceController::class, 'store'])->name('employees.attendance.store');
     Route::post('/employees/{employee}/leaves', [EmployeeLeaveController::class, 'store'])->name('employees.leaves.store');
+
+    // Must come before the resource route below — otherwise these are swallowed as a {service} id.
+    Route::get('/services/export', [ServiceController::class, 'export'])->name('services.export');
+    Route::get('/services/import-template', [ServiceController::class, 'importTemplate'])->name('services.import-template');
+    Route::post('/services/import', [ServiceController::class, 'import'])->name('services.import');
 
     Route::resource('services', ServiceController::class)->except(['show']);
     Route::patch('/services/{service}/status', [ServiceController::class, 'toggleStatus'])->name('services.toggle-status');
     Route::post('/services/seed-sample-catalog', [ServiceController::class, 'seedSampleCatalog'])->name('services.seed-sample-catalog');
     Route::resource('service-categories', ServiceCategoryController::class)->only(['store', 'update', 'destroy']);
 
-    // Must come before the resource route below — otherwise "quick-create" is swallowed as a {customer} id.
+    // Must come before the resource route below — otherwise these are swallowed as a {customer} id.
     Route::post('/customers/quick-create', [CustomerController::class, 'quickCreate'])->name('customers.quick-create');
+    Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+    Route::get('/customers/import-template', [CustomerController::class, 'importTemplate'])->name('customers.import-template');
+    Route::post('/customers/import', [CustomerController::class, 'import'])->name('customers.import');
 
     Route::resource('customers', CustomerController::class);
     Route::post('/customers/{customer}/wallet', [CustomerWalletController::class, 'store'])
         ->middleware('throttle:financial')->name('customers.wallet.store');
 
+    // Must come before the resource route below, for consistency with every other export route here.
+    Route::get('/appointments/export', [AppointmentController::class, 'export'])->name('appointments.export');
+
     Route::resource('appointments', AppointmentController::class)->except(['show']);
     Route::patch('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('appointments.update-status');
     Route::patch('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule'])->name('appointments.reschedule');
+
+    // Must come before the resource route below — otherwise it's swallowed as an {invoice} id.
+    Route::get('/invoices/export', [InvoiceController::class, 'export'])->name('invoices.export');
 
     Route::resource('invoices', InvoiceController::class)->only(['index', 'create', 'store', 'show']);
     Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
@@ -150,6 +169,11 @@ Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'subscription.active
 
     Route::get('/reports/commissions', [CommissionReportController::class, 'index'])->name('reports.commissions');
 
+    // Must come before the resource route below — otherwise these are swallowed as an {expense} id.
+    Route::get('/expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
+    Route::get('/expenses/import-template', [ExpenseController::class, 'importTemplate'])->name('expenses.import-template');
+    Route::post('/expenses/import', [ExpenseController::class, 'import'])->name('expenses.import');
+
     Route::resource('expenses', ExpenseController::class)->except(['show']);
 });
 
@@ -161,6 +185,8 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
         Route::get('/dashboard', [SuperAdminDashboardController::class, 'show'])->name('dashboard');
 
         Route::get('/spas', [SuperAdminSpaController::class, 'index'])->name('spas.index');
+        // Must come before the {spa} wildcard route below — otherwise "export" is swallowed as a spa id.
+        Route::get('/spas/export', [SuperAdminSpaController::class, 'export'])->name('spas.export');
         Route::get('/spas/{spa}', [SuperAdminSpaController::class, 'show'])->name('spas.show');
         Route::patch('/spas/{spa}/status', [SuperAdminSpaController::class, 'updateStatus'])->name('spas.update-status');
         Route::post('/spas/{spa}/impersonate', [SuperAdminSpaController::class, 'impersonate'])->name('spas.impersonate');
@@ -170,6 +196,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
         Route::delete('/spas/{spa}/owner', [SuperAdminSpaController::class, 'deleteOwner'])->name('spas.owner.delete');
 
         Route::get('/payments', [SuperAdminPaymentController::class, 'index'])->name('payments.index');
+        Route::get('/payments/export', [SuperAdminPaymentController::class, 'export'])->name('payments.export');
 
         Route::get('/pending-payments', [PendingPaymentController::class, 'index'])->name('pending-payments.index');
         Route::post('/pending-payments/{payment}/confirm', [PendingPaymentController::class, 'confirm'])->name('pending-payments.confirm');

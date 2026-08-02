@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web\SpaOwner;
 
 use App\Domain\Customers\Actions\CreateCustomerAction;
 use App\Domain\Customers\Actions\DeleteCustomerAction;
+use App\Domain\Customers\Actions\ExportCustomersAction;
+use App\Domain\Customers\Actions\ImportCustomersAction;
 use App\Domain\Customers\Actions\UpdateCustomerAction;
 use App\Domain\Customers\DTOs\CreateCustomerData;
 use App\Domain\Customers\Models\Customer;
@@ -16,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerController extends Controller
 {
@@ -117,6 +120,27 @@ class CustomerController extends Controller
         return redirect()->route('customers.index')->with('success', 'Customer removed.');
     }
 
+    public function export(Request $request, ExportCustomersAction $action): StreamedResponse
+    {
+        return $action->execute($request->string('search')->toString() ?: null);
+    }
+
+    public function importTemplate(ExportCustomersAction $action): StreamedResponse
+    {
+        return $action->template();
+    }
+
+    public function import(Request $request, ImportCustomersAction $action): RedirectResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
+
+        $result = $action->execute($request->file('file'));
+
+        return back()
+            ->with('success', "Imported {$result->importedCount} customer(s).")
+            ->with('import_errors', $result->rowErrors);
+    }
+
     private function formOptions(): array
     {
         return [
@@ -152,23 +176,10 @@ class CustomerController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'whatsapp_number' => ['nullable', 'string', 'max:20'],
-            'date_of_birth' => ['nullable', 'date'],
-            'anniversary_date' => ['nullable', 'date'],
-            'gender' => ['nullable', 'in:male,female,other'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'occupation' => ['nullable', 'string', 'max:255'],
-            'medical_notes' => ['nullable', 'string'],
-            'allergy_notes' => ['nullable', 'string'],
+            ...ImportCustomersAction::validationRules(),
             'preferred_service_id' => ['nullable', 'integer', 'exists:services,id'],
             'preferred_employee_id' => ['nullable', 'integer', 'exists:employees,id'],
             'tags' => ['nullable', 'array'],
-            'is_vip' => ['nullable', 'boolean'],
-            'referral_code' => ['nullable', 'string', 'max:20'],
         ]);
     }
 }

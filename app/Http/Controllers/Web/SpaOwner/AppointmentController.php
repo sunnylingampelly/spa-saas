@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\SpaOwner;
 
 use App\Domain\Appointments\Actions\CreateAppointmentAction;
 use App\Domain\Appointments\Actions\DeleteAppointmentAction;
+use App\Domain\Appointments\Actions\ExportAppointmentsAction;
 use App\Domain\Appointments\Actions\RescheduleAppointmentAction;
 use App\Domain\Appointments\Actions\UpdateAppointmentAction;
 use App\Domain\Appointments\Actions\UpdateAppointmentStatusAction;
@@ -18,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AppointmentController extends Controller
 {
@@ -126,6 +128,11 @@ class AppointmentController extends Controller
         $action->execute($appointment, $data['starts_at']);
 
         return back()->with('success', 'Appointment rescheduled.');
+    }
+
+    public function export(Request $request, ExportAppointmentsAction $action): StreamedResponse
+    {
+        return $action->execute($request->string('date')->toString() ?: now()->toDateString());
     }
 
     private function formOptions(): array

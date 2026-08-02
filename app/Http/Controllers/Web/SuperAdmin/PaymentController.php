@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Web\SuperAdmin;
 
+use App\Domain\Subscriptions\Actions\ExportSubscriptionPaymentsAction;
 use App\Domain\Subscriptions\Models\SubscriptionPayment;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentController extends Controller
 {
@@ -25,5 +27,10 @@ class PaymentController extends Controller
             'payments' => $payments,
             'filters' => ['status' => $status],
         ]);
+    }
+
+    public function export(Request $request, ExportSubscriptionPaymentsAction $action): StreamedResponse
+    {
+        return $action->execute($request->string('status')->toString() ?: null);
     }
 }

@@ -1,10 +1,11 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { PlusIcon } from '@heroicons/vue/24/outline';
+import { ArrowDownTrayIcon, PlusIcon } from '@heroicons/vue/24/outline';
 import BaseBadge from '../../Components/Ui/BaseBadge.vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import BaseTable from '../../Components/Ui/BaseTable.vue';
+import ImportSpreadsheetModal from '../../Components/Ui/ImportSpreadsheetModal.vue';
 import { useConfirm } from '../../Composables/useConfirm';
 import { formatDate } from '../../Composables/useDateFormat.js';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
@@ -44,9 +45,19 @@ async function destroy(expense) {
 
     <div class="mb-6 flex items-center justify-between">
         <h1 class="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">Expenses</h1>
-        <Link :href="route('expenses.create')">
-            <BaseButton><PlusIcon class="h-4 w-4" /> Add Expense</BaseButton>
-        </Link>
+        <div class="flex gap-3">
+            <a :href="route('expenses.export')">
+                <BaseButton variant="secondary"><ArrowDownTrayIcon class="h-4 w-4" /> Export</BaseButton>
+            </a>
+            <ImportSpreadsheetModal
+                label="expenses"
+                import-route="expenses.import"
+                import-template-route="expenses.import-template"
+            />
+            <Link :href="route('expenses.create')">
+                <BaseButton><PlusIcon class="h-4 w-4" /> Add Expense</BaseButton>
+            </Link>
+        </div>
     </div>
 
     <BaseCard>

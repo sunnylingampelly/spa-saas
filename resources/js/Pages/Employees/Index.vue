@@ -1,11 +1,12 @@
 <script setup>
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { PlusIcon } from '@heroicons/vue/24/outline';
+import { ArrowDownTrayIcon, PlusIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import BaseBadge from '../../Components/Ui/BaseBadge.vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import BaseListbox from '../../Components/Ui/BaseListbox.vue';
+import ImportSpreadsheetModal from '../../Components/Ui/ImportSpreadsheetModal.vue';
 import { formatDate } from '../../Composables/useDateFormat.js';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
 
@@ -53,6 +54,14 @@ function submitAttendance() {
             <BaseButton variant="secondary" @click="showAttendance = !showAttendance">
                 Mark Today's Attendance
             </BaseButton>
+            <a :href="route('employees.export')">
+                <BaseButton variant="secondary"><ArrowDownTrayIcon class="h-4 w-4" /> Export</BaseButton>
+            </a>
+            <ImportSpreadsheetModal
+                label="employees"
+                import-route="employees.import"
+                import-template-route="employees.import-template"
+            />
             <Link :href="route('employees.create')">
                 <BaseButton><PlusIcon class="h-4 w-4" /> Add Employee</BaseButton>
             </Link>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web\SpaOwner;
 
 use App\Domain\Services\Actions\CreateServiceAction;
 use App\Domain\Services\Actions\DeleteServiceAction;
+use App\Domain\Services\Actions\ExportServicesAction;
+use App\Domain\Services\Actions\ImportServicesAction;
 use App\Domain\Services\Actions\SeedSampleServiceCatalogAction;
 use App\Domain\Services\Actions\ToggleServiceStatusAction;
 use App\Domain\Services\Actions\UpdateServiceAction;
@@ -15,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ServiceController extends Controller
 {
@@ -99,21 +102,33 @@ class ServiceController extends Controller
         return back()->with('success', 'Sample service catalog loaded.');
     }
 
+    public function export(ExportServicesAction $action): StreamedResponse
+    {
+        return $action->execute();
+    }
+
+    public function importTemplate(ExportServicesAction $action): StreamedResponse
+    {
+        return $action->template();
+    }
+
+    public function import(Request $request, ImportServicesAction $action): RedirectResponse
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx,xls,csv']]);
+
+        $result = $action->execute($request->file('file'));
+
+        return back()
+            ->with('success', "Imported {$result->importedCount} service(s).")
+            ->with('import_errors', $result->rowErrors);
+    }
+
     private function validated(Request $request): array
     {
         return $request->validate([
+            ...ImportServicesAction::validationRules(),
             'service_category_id' => ['nullable', 'integer', 'exists:service_categories,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'duration_minutes' => ['required', 'integer', 'min:1'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'offer_price' => ['nullable', 'numeric', 'min:0'],
-            'gst_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'hsn_sac_code' => ['nullable', 'string', 'max:10'],
-            'commission_type' => ['nullable', 'in:percentage,flat'],
-            'commission_value' => ['nullable', 'numeric', 'min:0'],
             'color_hex' => ['nullable', 'string', 'max:7'],
-            'status' => ['nullable', 'in:active,inactive'],
         ]);
     }
 }

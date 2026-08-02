@@ -1,8 +1,9 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { PlusIcon } from '@heroicons/vue/24/outline';
+import { ArrowDownTrayIcon, PlusIcon } from '@heroicons/vue/24/outline';
 import BaseBadge from '../../Components/Ui/BaseBadge.vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
+import ImportSpreadsheetModal from '../../Components/Ui/ImportSpreadsheetModal.vue';
 import { useConfirm } from '../../Composables/useConfirm';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
 
@@ -45,6 +46,14 @@ function loadSampleCatalog() {
             <BaseButton v-if="services.data.length === 0" variant="secondary" @click="loadSampleCatalog">
                 Load Sample Catalog
             </BaseButton>
+            <a :href="route('services.export')">
+                <BaseButton variant="secondary"><ArrowDownTrayIcon class="h-4 w-4" /> Export</BaseButton>
+            </a>
+            <ImportSpreadsheetModal
+                label="services"
+                import-route="services.import"
+                import-template-route="services.import-template"
+            />
             <Link :href="route('services.create')">
                 <BaseButton><PlusIcon class="h-4 w-4" /> Add Service</BaseButton>
             </Link>
