@@ -61,4 +61,58 @@ class Appointment extends Model
     {
         return LogOptions::defaults()->logAll()->logOnlyDirty()->dontSubmitEmptyLogs();
     }
+
+    /**
+     * Check if the appointment can be cancelled
+     */
+    public function canBeCancelled(): bool
+    {
+        if (in_array($this->status, ['cancelled', 'no_show', 'completed'], true)) {
+            return false;
+        }
+
+        if ($this->invoice()->exists()) {
+            $invoice = $this->invoice;
+            if (in_array($invoice->status, ['paid', 'partially_paid'], true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if the appointment can be rescheduled
+     */
+    public function canBeRescheduled(): bool
+    {
+        if ($this->status === 'completed') {
+            return false;
+        }
+
+        if ($this->invoice()->exists()) {
+            $invoice = $this->invoice;
+            if (in_array($invoice->status, ['paid', 'partially_paid'], true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if the appointment can be deleted
+     */
+    public function canBeDeleted(): bool
+    {
+        return !$this->invoice()->exists() && $this->status !== 'completed';
+    }
+
+    /**
+     * Check if appointment is active (not cancelled/no-show)
+     */
+    public function isActive(): bool
+    {
+        return in_array($this->status, self::ACTIVE_STATUSES, true);
+    }
 }
