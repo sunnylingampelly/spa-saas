@@ -43,7 +43,11 @@ class PlatformMetricsService
             ->where('plan_code', 'monthly')
             ->count();
 
-        return round($activeMonthlySubscriptions * (float) config('subscriptions.plans.monthly.price'), 2);
+        // Monthly billing is retired (see config/subscriptions.php) — its price is no longer
+        // in config, but existing monthly subscribers still exist and their real revenue must
+        // keep showing up here rather than silently dropping to zero. ₹1,499 was always the
+        // fixed monthly price for as long as the plan was sold.
+        return round($activeMonthlySubscriptions * 1499.0, 2);
     }
 
     private function revenueTrend(Carbon $from, Carbon $to): array

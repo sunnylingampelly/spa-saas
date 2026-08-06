@@ -11,17 +11,19 @@ return [
     // discard the time already paid for (Monthly), so it's refused up front instead.
     'renewal_window_days' => 7,
 
-    // Two fixed payment options — not a DB-editable catalog, mirrors config/loyalty.php's
-    // "explicit, ownable business constant" convention.
+    // Monthly billing is disabled for now — a single one-time Lifetime purchase is the
+    // only plan on offer. Left commented out (rather than deleted) so it's a one-line
+    // revert if monthly billing comes back; existing 'monthly' subscribers are untouched
+    // (SuperAdmin's plan editor keeps its own separate list and can still manage them).
     'plans' => [
-        'monthly' => [
-            'label' => 'Monthly',
-            'price' => 1499,
-            'cycle' => 'monthly',
-        ],
+        // 'monthly' => [
+        //     'label' => 'Monthly',
+        //     'price' => 1499,
+        //     'cycle' => 'monthly',
+        // ],
         'lifetime' => [
             'label' => 'Lifetime',
-            'price' => 24999,
+            'price' => 10000,
             'cycle' => 'one_time',
         ],
     ],

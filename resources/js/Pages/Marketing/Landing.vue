@@ -141,7 +141,7 @@ const categories = [
 const faqs = [
     {
         q: `What happens after my ${props.trialDays}-day trial ends?`,
-        a: `Nothing is deleted and nothing happens automatically — your account simply pauses. You'll be asked to choose a plan (monthly or lifetime) from your Subscription page to keep going, and the moment you do, you're right back where you left off with all your data intact.`,
+        a: `Nothing is deleted and nothing happens automatically — your account simply pauses. You'll be asked to make the one-time Lifetime purchase from your Subscription page to keep going, and the moment you do, you're right back where you left off with all your data intact.`,
     },
     {
         q: 'Do I need a credit card to start the trial?',
@@ -159,10 +159,11 @@ const faqs = [
         q: 'Can multiple staff members log in?',
         a: 'SpaOrbit is intentionally owner-only login — one simple, secure account per spa, with staff managed as records inside the app rather than separate logins to juggle.',
     },
-    {
-        q: 'Can I switch between the monthly and lifetime plan?',
-        a: 'Yes, any time from your Subscription page — or just message support if you need a hand.',
-    },
+    // Monthly plan disabled for now — see config/subscriptions.php.
+    // {
+    //     q: 'Can I switch between the monthly and lifetime plan?',
+    //     a: 'Yes, any time from your Subscription page — or just message support if you need a hand.',
+    // },
 ];
 </script>
 
@@ -381,9 +382,10 @@ const faqs = [
         <div class="card text-center">
             <h2 class="font-serif text-3xl text-slate-900 dark:text-white sm:text-4xl">Simple, honest pricing</h2>
             <p class="mx-auto mt-3 max-w-lg text-sm text-slate-500 dark:text-slate-400">
-                One product, two ways to pay. Every {{ trialDays }}-day trial starts free — no card required.
+                One product, one price. Every {{ trialDays }}-day trial starts free — no card required.
             </p>
-            <div class="mx-auto mt-8 grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
+            <div class="mx-auto mt-8 grid max-w-2xl grid-cols-1 gap-6">
+                <!-- Monthly plan disabled for now — see config/subscriptions.php.
                 <div class="rounded-2xl border border-slate-100 p-6 text-left dark:border-slate-800">
                     <p class="text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ plans.monthly.label }}</p>
                     <p class="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
@@ -391,7 +393,8 @@ const faqs = [
                     </p>
                     <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Cancel any time.</p>
                 </div>
-                <div class="rounded-2xl border border-brand-200 p-6 text-left dark:border-brand-800/60">
+                -->
+                <div class="mx-auto w-full max-w-sm rounded-2xl border border-brand-200 p-6 text-left dark:border-brand-800/60">
                     <p class="text-sm font-medium uppercase tracking-wide text-brand-600 dark:text-brand-400">{{ plans.lifetime.label }} · Best value</p>
                     <p class="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
                         {{ rupees(plans.lifetime.price) }}<span class="text-base font-normal text-slate-400"> one-time</span>
@@ -426,7 +429,7 @@ const faqs = [
         <div class="card !bg-gradient-to-br !from-brand-600 !to-brand-500 !border-0 px-8 py-12 text-white">
             <h2 class="font-serif text-3xl sm:text-4xl">Ready to see it running your spa?</h2>
             <p class="mx-auto mt-3 max-w-lg text-brand-50">
-                Set up your spa in minutes. Free for {{ trialDays }} days, then choose monthly or a one-time lifetime plan.
+                Set up your spa in minutes. Free for {{ trialDays }} days, then a one-time Lifetime purchase.
             </p>
             <Link :href="route('register')" class="btn mt-6 bg-white px-6 py-3 text-base text-brand-700 hover:bg-brand-50">
                 Start free trial

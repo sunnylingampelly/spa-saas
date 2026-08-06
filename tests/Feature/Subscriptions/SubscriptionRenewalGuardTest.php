@@ -49,7 +49,7 @@ class SubscriptionRenewalGuardTest extends TestCase
             'plan_code' => $planCode,
             'method' => 'manual',
             'status' => 'pending',
-            'amount' => config("subscriptions.plans.{$planCode}.price"),
+            'amount' => $planCode === 'monthly' ? 1499 : config("subscriptions.plans.{$planCode}.price"),
         ]);
 
         app(ActivateSubscriptionFromPaymentAction::class)->execute($payment);
@@ -69,13 +69,15 @@ class SubscriptionRenewalGuardTest extends TestCase
 
     public function test_renewing_monthly_far_from_expiry_is_blocked_and_charges_nothing(): void
     {
+        // 'monthly' can no longer even be selected as a purchase (see config/subscriptions.php),
+        // so this can't be exercised through the HTTP endpoint anymore — the guard itself is
+        // still generic to any plan_code though, including existing monthly subscribers.
         $this->activatePaidPayment('monthly'); // now active, ~30 days remaining
 
-        $response = $this->actingAs($this->owner)->postJson('/subscription/razorpay/order', ['plan' => 'monthly']);
+        $reason = $this->spa->subscription->fresh()->blockingReasonForPurchase('monthly');
 
-        $response->assertStatus(422);
-        $this->assertStringContainsString('already active until', $response->json('message'));
-        $this->assertSame(1, SubscriptionPayment::withoutGlobalScopes()->count(), 'No new payment row should have been created.');
+        $this->assertNotNull($reason);
+        $this->assertStringContainsString('already active until', $reason);
     }
 
     public function test_the_same_guard_blocks_a_redundant_manual_upi_claim_too(): void
@@ -103,7 +105,7 @@ class SubscriptionRenewalGuardTest extends TestCase
             'plan_code' => 'monthly',
             'method' => 'manual',
             'status' => 'pending',
-            'amount' => config('subscriptions.plans.monthly.price'),
+            'amount' => 1499, // Monthly is no longer purchasable, but existing subscribers on it still exist.
         ]);
         app(ActivateSubscriptionFromPaymentAction::class)->execute($renewalPayment);
 
@@ -129,7 +131,7 @@ class SubscriptionRenewalGuardTest extends TestCase
             'plan_code' => 'monthly',
             'method' => 'manual',
             'status' => 'pending',
-            'amount' => config('subscriptions.plans.monthly.price'),
+            'amount' => 1499, // Monthly is no longer purchasable, but existing subscribers on it still exist.
         ]);
         app(ActivateSubscriptionFromPaymentAction::class)->execute($newPayment);
 
@@ -178,12 +180,10 @@ class SubscriptionRenewalGuardTest extends TestCase
     {
         $this->activatePaidPayment('lifetime');
 
-        $monthlyAttempt = $this->actingAs($this->owner)->postJson('/subscription/razorpay/order', ['plan' => 'monthly']);
         $lifetimeAttempt = $this->actingAs($this->owner)->postJson('/subscription/razorpay/order', ['plan' => 'lifetime']);
 
-        $monthlyAttempt->assertStatus(422);
         $lifetimeAttempt->assertStatus(422);
-        $this->assertStringContainsString('lifetime access', $monthlyAttempt->json('message'));
+        $this->assertStringContainsString('lifetime access', $lifetimeAttempt->json('message'));
         $this->assertSame(1, SubscriptionPayment::withoutGlobalScopes()->count());
     }
 
@@ -193,15 +193,15 @@ class SubscriptionRenewalGuardTest extends TestCase
         $existing = SubscriptionPayment::create([
             'spa_id' => $this->spa->id,
             'subscription_id' => $this->spa->subscription->id,
-            'plan_code' => 'monthly',
+            'plan_code' => 'lifetime',
             'method' => 'razorpay',
             'status' => 'pending',
-            'amount' => config('subscriptions.plans.monthly.price'),
+            'amount' => 10000,
             'razorpay_order_id' => 'order_first_click',
         ]);
 
         // Priya double-clicks — this must reuse the same order, never call Razorpay again.
-        $response = $this->actingAs($this->owner)->postJson('/subscription/razorpay/order', ['plan' => 'monthly']);
+        $response = $this->actingAs($this->owner)->postJson('/subscription/razorpay/order', ['plan' => 'lifetime']);
 
         $response->assertOk();
         $response->assertJsonPath('order_id', 'order_first_click');

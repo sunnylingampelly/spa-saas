@@ -82,7 +82,7 @@ class SubscriptionEnforcementTest extends TestCase
     public function test_submitting_a_manual_payment_creates_a_pending_record(): void
     {
         $this->actingAs($this->owner)->post('/subscription/manual', [
-            'plan' => 'monthly',
+            'plan' => 'lifetime',
             'proof_note' => 'UPI ref 123456',
         ])->assertRedirect();
 
@@ -90,8 +90,8 @@ class SubscriptionEnforcementTest extends TestCase
 
         $this->assertSame('pending', $payment->status);
         $this->assertSame('manual', $payment->method);
-        $this->assertSame('monthly', $payment->plan_code);
-        $this->assertSame(1499.0, (float) $payment->amount);
+        $this->assertSame('lifetime', $payment->plan_code);
+        $this->assertSame(10000.0, (float) $payment->amount);
     }
 
     public function test_confirming_a_manual_payment_activates_the_subscription(): void
@@ -119,7 +119,7 @@ class SubscriptionEnforcementTest extends TestCase
 
     public function test_confirming_an_already_paid_payment_is_idempotent(): void
     {
-        $this->actingAs($this->owner)->post('/subscription/manual', ['plan' => 'monthly']);
+        $this->actingAs($this->owner)->post('/subscription/manual', ['plan' => 'lifetime']);
         $payment = SubscriptionPayment::firstOrFail();
 
         $admin = User::factory()->create();
