@@ -8,6 +8,7 @@ use App\Providers\EmployeesServiceProvider;
 use App\Providers\ExpensesServiceProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Providers\HorizonServiceProvider;
+use App\Providers\MarketingServiceProvider;
 use App\Providers\RepositoryServiceProvider;
 use App\Providers\ServicesServiceProvider;
 use App\Providers\SupportServiceProvider;
@@ -26,4 +27,5 @@ return [
     BillingServiceProvider::class,
     ExpensesServiceProvider::class,
     SupportServiceProvider::class,
+    MarketingServiceProvider::class,
 ];

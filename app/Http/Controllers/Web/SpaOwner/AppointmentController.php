@@ -27,9 +27,11 @@ class AppointmentController extends Controller
     {
         $date = $request->string('date')->toString() ?: now()->toDateString();
         $day = Carbon::parse($date);
+        $leadSource = $request->string('lead_source')->toString();
 
         return Inertia::render('Appointments/Index', [
             'date' => $day->toDateString(),
+            'filters' => ['lead_source' => $leadSource ?: null],
             'appointments' => Appointment::query()
                 ->with([
                     'customer:id,name,phone',
@@ -38,6 +40,7 @@ class AppointmentController extends Controller
                     'invoice:id,appointment_id,invoice_number,status',
                 ])
                 ->whereBetween('starts_at', [$day->copy()->startOfDay(), $day->copy()->endOfDay()])
+                ->when($leadSource, fn ($q) => $q->where('lead_source', $leadSource))
                 ->orderBy('starts_at')
                 ->get(),
         ]);
@@ -61,6 +64,7 @@ class AppointmentController extends Controller
             startsAt: $data['starts_at'],
             employeeId: $data['employee_id'] ?? null,
             bookingType: $data['booking_type'] ?? 'advance',
+            leadSource: $data['lead_source'] ?? 'walk_in',
             notes: $data['notes'] ?? null,
         ));
 
@@ -85,6 +89,7 @@ class AppointmentController extends Controller
 
         $data = $request->validate([
             'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
+            'lead_source' => ['nullable', 'in:'.implode(',', Appointment::LEAD_SOURCES)],
             'notes' => ['nullable', 'string'],
         ]);
 
@@ -151,6 +156,7 @@ class AppointmentController extends Controller
             'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
             'service_id' => ['required', 'integer', 'exists:services,id'],
             'booking_type' => ['nullable', 'in:walk_in,advance'],
+            'lead_source' => ['nullable', 'in:'.implode(',', Appointment::LEAD_SOURCES)],
             'starts_at' => ['required', 'date'],
             'notes' => ['nullable', 'string'],
         ]);

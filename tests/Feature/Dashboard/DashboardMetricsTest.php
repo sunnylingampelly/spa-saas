@@ -80,7 +80,10 @@ class DashboardMetricsTest extends TestCase
             'customer_id' => $this->customer->id,
             'service_id' => $this->service->id,
             'booking_type' => 'walk_in',
-            'starts_at' => now()->format('Y-m-d H:i:s'),
+            // A couple of minutes ahead, not exactly "now" — by the time this request reaches
+            // CreateAppointmentAction's isPast() check, "now" has moved on and an exact-now
+            // timestamp captured here would already read as in the past.
+            'starts_at' => now()->addMinutes(2)->format('Y-m-d H:i:s'),
         ]);
 
         $metrics = app(DashboardMetricsService::class)->forSpa($this->spa->fresh());

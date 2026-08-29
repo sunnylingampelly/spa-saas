@@ -10,6 +10,7 @@ use App\Domain\Employees\Models\Employee;
 use App\Domain\Employees\Models\EmployeeAttendance;
 use App\Domain\Employees\Models\EmployeeLeave;
 use App\Domain\Expenses\Models\Expense;
+use App\Domain\Marketing\Models\EmailCampaign;
 use App\Domain\Services\Models\Service;
 use App\Domain\Services\Models\ServiceCategory;
 use App\Domain\Subscriptions\Models\Subscription;
@@ -43,6 +44,7 @@ class ActivityLogController extends Controller
         Appointment::class,
         Subscription::class,
         SupportTicket::class,
+        EmailCampaign::class,
     ];
 
     public function index(Request $request): Response

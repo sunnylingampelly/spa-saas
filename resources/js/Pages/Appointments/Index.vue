@@ -19,9 +19,24 @@ const statusOptions = [
     { value: 'no_show', label: 'No show' },
 ];
 
+const leadSourceLabels = {
+    walk_in: 'Walk-in',
+    google_ads: 'Google Ads',
+    meta_ads: 'Meta Ads',
+    referral: 'Referral',
+    website: 'Website',
+    phone_enquiry: 'Phone enquiry',
+    other: 'Other',
+};
+
+const leadSourceFilterOptions = Object.entries(leadSourceLabels).map(([value, label]) => ({ value, label }));
+
+const leadSourceColor = (source) => (['google_ads', 'meta_ads'].includes(source) ? 'brand' : 'slate');
+
 const props = defineProps({
     date: { type: String, required: true },
     appointments: { type: Array, required: true },
+    filters: { type: Object, required: true },
 });
 
 const statusColor = (status) => ({
@@ -34,7 +49,11 @@ const statusColor = (status) => ({
 }[status] ?? 'slate');
 
 function goToDate(newDate) {
-    router.get(route('appointments.index'), { date: newDate }, { preserveState: true });
+    router.get(route('appointments.index'), { date: newDate, lead_source: props.filters.lead_source }, { preserveState: true });
+}
+
+function filterBySource(source) {
+    router.get(route('appointments.index'), { date: props.date, lead_source: source }, { preserveState: true });
 }
 
 function shiftDay(offset) {
@@ -68,6 +87,13 @@ function setStatus(appointment, status) {
             <button class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" @click="shiftDay(1)">
                 <ChevronRightIcon class="h-5 w-5" />
             </button>
+            <BaseListbox
+                class="ml-2 w-44"
+                :model-value="filters.lead_source"
+                :options="leadSourceFilterOptions"
+                placeholder="All sources"
+                @update:model-value="filterBySource"
+            />
             <a :href="route('appointments.export', { date })">
                 <BaseButton variant="secondary" class="ml-2"><ArrowDownTrayIcon class="h-4 w-4" /> Export</BaseButton>
             </a>
@@ -103,6 +129,9 @@ function setStatus(appointment, status) {
                         <p class="text-sm text-slate-500 dark:text-slate-400">
                             {{ appointment.employee?.name ?? 'Unassigned' }}
                             <BaseBadge v-if="appointment.booking_type === 'walk_in'" color="amber" class="ml-2">Walk-in</BaseBadge>
+                            <BaseBadge :color="leadSourceColor(appointment.lead_source)" class="ml-2">
+                                {{ leadSourceLabels[appointment.lead_source] ?? appointment.lead_source }}
+                            </BaseBadge>
                         </p>
                     </div>
                 </div>

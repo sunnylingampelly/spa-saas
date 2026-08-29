@@ -1,0 +1,55 @@
+<script setup>
+import { Head, Link } from '@inertiajs/vue3';
+import { PlusIcon } from '@heroicons/vue/24/outline';
+import BaseBadge from '../../Components/Ui/BaseBadge.vue';
+import BaseButton from '../../Components/Ui/BaseButton.vue';
+import BaseCard from '../../Components/Ui/BaseCard.vue';
+import BaseTable from '../../Components/Ui/BaseTable.vue';
+import { formatDate } from '../../Composables/useDateFormat.js';
+import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
+
+defineOptions({ layout: AuthenticatedLayout });
+
+defineProps({
+    campaigns: { type: Array, required: true },
+});
+
+const statusColor = { draft: 'slate', sending: 'amber', sent: 'green' };
+
+const columns = [
+    { key: 'name', label: 'Campaign' },
+    { key: 'status', label: 'Status' },
+    { key: 'recipients_count', label: 'Recipients' },
+    { key: 'open_rate', label: 'Opened' },
+    { key: 'click_rate', label: 'Clicked' },
+    { key: 'sent_at', label: 'Sent' },
+];
+</script>
+
+<template>
+    <Head title="Email Campaigns" />
+
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <h1 class="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">Email Campaigns</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Retention emails to your customer list — templates, sending, and open/click analytics.</p>
+        </div>
+        <Link :href="route('email-campaigns.create')">
+            <BaseButton><PlusIcon class="h-4 w-4" /> New Campaign</BaseButton>
+        </Link>
+    </div>
+
+    <BaseCard>
+        <BaseTable :columns="columns" :rows="campaigns" empty-message="No campaigns yet — create your first one.">
+            <template #cell-name="{ row }">
+                <Link :href="route('email-campaigns.show', row.id)" class="font-medium text-brand-600 hover:text-brand-700">
+                    {{ row.name }}
+                </Link>
+            </template>
+            <template #cell-status="{ row }"><BaseBadge :color="statusColor[row.status]">{{ row.status }}</BaseBadge></template>
+            <template #cell-open_rate="{ row }">{{ row.open_rate }}%</template>
+            <template #cell-click_rate="{ row }">{{ row.click_rate }}%</template>
+            <template #cell-sent_at="{ row }">{{ row.sent_at ? formatDate(row.sent_at) : '—' }}</template>
+        </BaseTable>
+    </BaseCard>
+</template>

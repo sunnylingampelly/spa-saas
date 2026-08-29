@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import BaseCombobox from '../../Components/Ui/BaseCombobox.vue';
+import BaseListbox from '../../Components/Ui/BaseListbox.vue';
 import BaseTextarea from '../../Components/Ui/BaseTextarea.vue';
 import { useConfirm } from '../../Composables/useConfirm';
 import { formatDate } from '../../Composables/useDateFormat.js';
@@ -20,8 +21,19 @@ const props = defineProps({
 
 const employeeOptions = computed(() => props.employees.map((e) => ({ value: e.id, label: e.name })));
 
+const leadSourceOptions = [
+    { value: 'walk_in', label: 'Walk-in' },
+    { value: 'google_ads', label: 'Google Ads' },
+    { value: 'meta_ads', label: 'Meta Ads (Facebook/Instagram)' },
+    { value: 'referral', label: 'Referral' },
+    { value: 'website', label: 'Website / Organic' },
+    { value: 'phone_enquiry', label: 'Phone enquiry' },
+    { value: 'other', label: 'Other' },
+];
+
 const form = useForm({
     employee_id: props.appointment.employee_id ?? '',
+    lead_source: props.appointment.lead_source ?? 'walk_in',
     notes: props.appointment.notes ?? '',
 });
 
@@ -63,6 +75,12 @@ async function destroy() {
             <BaseCard title="Details">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <BaseCombobox v-model="form.employee_id" label="Therapist" :options="employeeOptions" placeholder="Unassigned" />
+                    <BaseListbox
+                        v-model="form.lead_source"
+                        label="Booking source"
+                        :options="leadSourceOptions"
+                        :error="form.errors.lead_source"
+                    />
                 </div>
                 <div class="mt-4">
                     <BaseTextarea v-model="form.notes" label="Notes" :rows="3" />

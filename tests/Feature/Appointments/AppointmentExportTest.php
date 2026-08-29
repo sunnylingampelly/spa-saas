@@ -17,9 +17,13 @@ class AppointmentExportTest extends TestCase
 
     private User $owner;
 
+    private string $appointmentDate;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->appointmentDate = now()->addDays(60)->format('Y-m-d');
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -40,13 +44,13 @@ class AppointmentExportTest extends TestCase
             'customer_id' => $customer->id,
             'employee_id' => $employee->id,
             'service_id' => $service->id,
-            'starts_at' => '2026-08-10 10:00',
+            'starts_at' => "{$this->appointmentDate} 10:00",
         ]);
     }
 
     public function test_export_produces_a_valid_spreadsheet_for_the_selected_day_only(): void
     {
-        $response = $this->actingAs($this->owner)->get('/appointments/export?date=2026-08-10');
+        $response = $this->actingAs($this->owner)->get("/appointments/export?date={$this->appointmentDate}");
         $response->assertOk();
 
         $path = tempnam(sys_get_temp_dir(), 'export_test_').'.xlsx';
@@ -61,7 +65,8 @@ class AppointmentExportTest extends TestCase
 
     public function test_export_for_a_different_day_returns_no_rows(): void
     {
-        $response = $this->actingAs($this->owner)->get('/appointments/export?date=2026-08-11');
+        $differentDate = now()->addDays(61)->format('Y-m-d');
+        $response = $this->actingAs($this->owner)->get("/appointments/export?date={$differentDate}");
         $response->assertOk();
 
         $path = tempnam(sys_get_temp_dir(), 'export_test_').'.xlsx';

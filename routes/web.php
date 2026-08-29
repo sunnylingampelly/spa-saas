@@ -7,6 +7,8 @@ use App\Http\Controllers\Web\SpaOwner\CommissionReportController;
 use App\Http\Controllers\Web\SpaOwner\CustomerController;
 use App\Http\Controllers\Web\SpaOwner\CustomerWalletController;
 use App\Http\Controllers\Web\SpaOwner\DashboardController;
+use App\Http\Controllers\Web\Public\EmailCampaignTrackingController;
+use App\Http\Controllers\Web\SpaOwner\EmailCampaignController;
 use App\Http\Controllers\Web\SpaOwner\EmployeeAttendanceController;
 use App\Http\Controllers\Web\SpaOwner\EmployeeController;
 use App\Http\Controllers\Web\SpaOwner\EmployeeLeaveController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\Web\SpaOwner\InvoiceController;
 use App\Http\Controllers\Web\SpaOwner\InvoiceDeliveryController;
 use App\Http\Controllers\Web\SpaOwner\InvoicePaymentController;
 use App\Http\Controllers\Web\Public\InvoicePaymentController as PublicInvoicePaymentController;
+use App\Http\Controllers\Web\SpaOwner\LeadSourceReportController;
 use App\Http\Controllers\Web\SpaOwner\ServiceCategoryController;
 use App\Http\Controllers\Web\SpaOwner\ServiceController;
 use App\Http\Controllers\Web\SpaOwner\SpaProfileController;
@@ -56,6 +59,15 @@ Route::prefix('pay')->name('public.invoices.')->group(function () {
         Route::post('/{invoice:public_token}/razorpay/order', [PublicInvoicePaymentController::class, 'createOrder'])->name('razorpay.order');
         Route::post('/{invoice:public_token}/razorpay/verify', [PublicInvoicePaymentController::class, 'verify'])->name('razorpay.verify');
     });
+});
+
+// Fully public — reached only via an unguessable EmailCampaignRecipient::tracking_token.
+// No auth, no spa.context — these links live inside an email sent to someone who has never
+// logged into this platform.
+Route::prefix('email')->name('public.email-campaigns.')->group(function () {
+    Route::get('/track/open/{recipient:tracking_token}', [EmailCampaignTrackingController::class, 'trackOpen'])->name('track-open');
+    Route::get('/track/click/{recipient:tracking_token}', [EmailCampaignTrackingController::class, 'trackClick'])->name('track-click');
+    Route::get('/unsubscribe/{recipient:tracking_token}', [EmailCampaignTrackingController::class, 'unsubscribe'])->name('unsubscribe');
 });
 
 Route::middleware('auth')->group(function () {
@@ -168,6 +180,15 @@ Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'subscription.active
     Route::post('/invoices/{invoice}/email', [InvoiceDeliveryController::class, 'email'])->name('invoices.email');
 
     Route::get('/reports/commissions', [CommissionReportController::class, 'index'])->name('reports.commissions');
+    Route::get('/reports/lead-sources', [LeadSourceReportController::class, 'index'])->name('reports.lead-sources');
+
+    // Must come before the resource route below — otherwise "audience-preview" is swallowed as an {email_campaign} id.
+    Route::post('/email-campaigns/audience-preview', [EmailCampaignController::class, 'audiencePreview'])->name('email-campaigns.audience-preview');
+
+    Route::resource('email-campaigns', EmailCampaignController::class)
+        ->except(['edit', 'update'])
+        ->parameters(['email-campaigns' => 'campaign']);
+    Route::post('/email-campaigns/{campaign}/send', [EmailCampaignController::class, 'send'])->name('email-campaigns.send');
 
     // Must come before the resource route below — otherwise these are swallowed as an {expense} id.
     Route::get('/expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');

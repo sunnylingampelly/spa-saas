@@ -20,9 +20,13 @@ class AppointmentBillingTest extends TestCase
 
     private Appointment $appointment;
 
+    private string $day;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->day = now()->addDays(60)->format('Y-m-d');
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -43,7 +47,7 @@ class AppointmentBillingTest extends TestCase
             'customer_id' => $customer->id,
             'employee_id' => $employee->id,
             'service_id' => $service->id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->day} 10:00:00",
         ]);
         $this->appointment = Appointment::firstOrFail();
     }
@@ -82,7 +86,7 @@ class AppointmentBillingTest extends TestCase
             'items' => [['service_id' => $this->appointment->service_id, 'quantity' => 1]],
         ]);
 
-        $response = $this->actingAs($this->owner)->get('/appointments?date=2026-08-05');
+        $response = $this->actingAs($this->owner)->get("/appointments?date={$this->day}");
 
         $response->assertInertia(fn ($page) => $page->where('appointments.0.invoice.id', Invoice::first()->id));
     }

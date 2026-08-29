@@ -18,6 +18,16 @@ const bookingTypeOptions = [
     { value: 'walk_in', label: 'Walk-in' },
 ];
 
+const leadSourceOptions = [
+    { value: 'walk_in', label: 'Walk-in' },
+    { value: 'google_ads', label: 'Google Ads' },
+    { value: 'meta_ads', label: 'Meta Ads (Facebook/Instagram)' },
+    { value: 'referral', label: 'Referral' },
+    { value: 'website', label: 'Website / Organic' },
+    { value: 'phone_enquiry', label: 'Phone enquiry' },
+    { value: 'other', label: 'Other' },
+];
+
 const props = defineProps({
     customers: { type: Array, required: true },
     employees: { type: Array, required: true },
@@ -41,6 +51,7 @@ const form = useForm({
     employee_id: '',
     service_id: '',
     booking_type: 'advance',
+    lead_source: 'walk_in',
     starts_at: `${props.initialDate}T10:00`,
     notes: '',
 });
@@ -106,6 +117,13 @@ async function submitQuickAdd() {
                 />
 
                 <BaseListbox v-model="form.booking_type" label="Booking type" :options="bookingTypeOptions" />
+
+                <BaseListbox
+                    v-model="form.lead_source"
+                    label="Booking source"
+                    :options="leadSourceOptions"
+                    :error="form.errors.lead_source"
+                />
 
                 <BaseCombobox
                     v-model="form.service_id"

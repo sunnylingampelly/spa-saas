@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ExportAppointmentsAction
 {
     private const HEADINGS = [
-        'time', 'customer', 'service', 'employee', 'booking_type', 'status',
+        'time', 'customer', 'service', 'employee', 'booking_type', 'lead_source', 'status',
     ];
 
     public function __construct(private readonly SpreadsheetExportService $exportService) {}
@@ -30,6 +30,7 @@ class ExportAppointmentsAction
                 $appointment->service?->name,
                 $appointment->employee?->name ?? 'Unassigned',
                 $appointment->booking_type,
+                $appointment->lead_source,
                 $appointment->status,
             ]);
 

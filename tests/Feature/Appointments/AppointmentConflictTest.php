@@ -23,9 +23,13 @@ class AppointmentConflictTest extends TestCase
 
     private Service $service;
 
+    private string $day;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->day = now()->addDays(60)->format('Y-m-d');
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -47,7 +51,7 @@ class AppointmentConflictTest extends TestCase
             'customer_id' => $this->customer->id,
             'employee_id' => $this->employee->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->day} 10:00:00",
         ]);
     }
 
@@ -57,7 +61,7 @@ class AppointmentConflictTest extends TestCase
             'customer_id' => $this->customer->id,
             'employee_id' => $this->employee->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 10:30:00', // overlaps 10:00-11:00
+            'starts_at' => "{$this->day} 10:30:00", // overlaps 10:00-11:00
         ]);
 
         $response->assertSessionHasErrors('employee_id');
@@ -70,7 +74,7 @@ class AppointmentConflictTest extends TestCase
             'customer_id' => $this->customer->id,
             'employee_id' => $this->employee->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 11:00:00', // starts exactly when the first ends
+            'starts_at' => "{$this->day} 11:00:00", // starts exactly when the first ends
         ])->assertRedirect();
 
         $this->assertSame(2, Appointment::count());
@@ -85,7 +89,7 @@ class AppointmentConflictTest extends TestCase
             'customer_id' => $this->customer->id,
             'employee_id' => $secondEmployee->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->day} 10:00:00",
         ])->assertRedirect();
 
         $this->assertSame(2, Appointment::count());
@@ -94,13 +98,13 @@ class AppointmentConflictTest extends TestCase
     public function test_a_cancelled_appointment_does_not_block_the_slot(): void
     {
         $existing = Appointment::first();
-        $this->actingAs($this->owner)->patch("/appointments/{$existing->id}/status", ['status' => 'cancelled']);
+        $this->actingAs($this->owner)->patch("/appointments/{$existing->id}/status", ['status' => 'cancelled', 'cancelled_reason' => 'Customer requested']);
 
         $this->actingAs($this->owner)->post('/appointments', [
             'customer_id' => $this->customer->id,
             'employee_id' => $this->employee->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 10:30:00',
+            'starts_at' => "{$this->day} 10:30:00",
         ])->assertRedirect();
 
         $this->assertSame(2, Appointment::count());
@@ -112,15 +116,15 @@ class AppointmentConflictTest extends TestCase
             'customer_id' => $this->customer->id,
             'employee_id' => $this->employee->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 14:00:00',
+            'starts_at' => "{$this->day} 14:00:00",
         ]);
         $second = Appointment::latest('id')->first();
 
         $response = $this->actingAs($this->owner)->patch("/appointments/{$second->id}/reschedule", [
-            'starts_at' => '2026-08-05 10:15:00',
+            'starts_at' => "{$this->day} 10:15:00",
         ]);
 
         $response->assertSessionHasErrors('starts_at');
-        $this->assertSame('2026-08-05 14:00:00', $second->fresh()->starts_at->format('Y-m-d H:i:s'));
+        $this->assertSame("{$this->day} 14:00:00", $second->fresh()->starts_at->format('Y-m-d H:i:s'));
     }
 }

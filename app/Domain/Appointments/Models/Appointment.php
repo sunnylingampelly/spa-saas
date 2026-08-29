@@ -21,8 +21,10 @@ class Appointment extends Model
 
     public const ACTIVE_STATUSES = ['booked', 'confirmed', 'in_progress'];
 
+    public const LEAD_SOURCES = ['walk_in', 'google_ads', 'meta_ads', 'referral', 'website', 'phone_enquiry', 'other'];
+
     protected $fillable = [
-        'customer_id', 'employee_id', 'service_id', 'booking_type',
+        'customer_id', 'employee_id', 'service_id', 'booking_type', 'lead_source',
         'starts_at', 'ends_at', 'status', 'notes', 'cancelled_reason',
     ];
 

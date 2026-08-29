@@ -10,6 +10,7 @@ use App\Domain\Employees\Models\Employee;
 use App\Domain\Employees\Models\EmployeeAttendance;
 use App\Domain\Employees\Models\EmployeeLeave;
 use App\Domain\Expenses\Models\Expense;
+use App\Domain\Marketing\Models\EmailCampaign;
 use App\Domain\Services\Models\Service;
 use App\Domain\Services\Models\ServiceCategory;
 use App\Domain\Subscriptions\Models\Subscription;
@@ -35,7 +36,7 @@ class ActivityLoggingConfiguredTest extends TestCase
             [Spa::class], [SpaSetting::class], [Employee::class], [EmployeeAttendance::class],
             [EmployeeLeave::class], [Service::class], [ServiceCategory::class], [Customer::class],
             [Invoice::class], [Payment::class], [Expense::class], [Appointment::class], [User::class],
-            [Subscription::class], [SupportTicket::class],
+            [Subscription::class], [SupportTicket::class], [EmailCampaign::class],
         ];
     }
 

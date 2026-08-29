@@ -23,9 +23,13 @@ class AppointmentCrudTest extends TestCase
 
     private Service $service;
 
+    private string $day;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->day = now()->addDays(60)->format('Y-m-d');
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -49,16 +53,16 @@ class AppointmentCrudTest extends TestCase
             'customer_id' => $this->customer->id,
             'employee_id' => $this->employee->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->day} 10:00:00",
         ]);
 
         $appointment = Appointment::first();
 
         $this->assertNotNull($appointment);
-        $this->assertSame('2026-08-05 10:00:00', $appointment->starts_at->format('Y-m-d H:i:s'));
-        $this->assertSame('2026-08-05 11:00:00', $appointment->ends_at->format('Y-m-d H:i:s'));
+        $this->assertSame("{$this->day} 10:00:00", $appointment->starts_at->format('Y-m-d H:i:s'));
+        $this->assertSame("{$this->day} 11:00:00", $appointment->ends_at->format('Y-m-d H:i:s'));
         $this->assertSame('booked', $appointment->status);
-        $response->assertRedirect(route('appointments.index', ['date' => '2026-08-05']));
+        $response->assertRedirect(route('appointments.index', ['date' => $this->day]));
     }
 
     public function test_status_can_be_updated(): void
@@ -66,7 +70,7 @@ class AppointmentCrudTest extends TestCase
         $this->actingAs($this->owner)->post('/appointments', [
             'customer_id' => $this->customer->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->day} 10:00:00",
         ]);
         $appointment = Appointment::first();
 
@@ -80,7 +84,7 @@ class AppointmentCrudTest extends TestCase
         $this->actingAs($this->owner)->post('/appointments', [
             'customer_id' => $this->customer->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->day} 10:00:00",
         ]);
         $appointment = Appointment::first();
 
@@ -99,17 +103,17 @@ class AppointmentCrudTest extends TestCase
             'customer_id' => $this->customer->id,
             'employee_id' => $this->employee->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->day} 10:00:00",
         ]);
         $appointment = Appointment::first();
 
         $this->actingAs($this->owner)->patch("/appointments/{$appointment->id}/reschedule", [
-            'starts_at' => '2026-08-05 14:00:00',
+            'starts_at' => "{$this->day} 14:00:00",
         ]);
 
         $fresh = $appointment->fresh();
-        $this->assertSame('2026-08-05 14:00:00', $fresh->starts_at->format('Y-m-d H:i:s'));
-        $this->assertSame('2026-08-05 15:00:00', $fresh->ends_at->format('Y-m-d H:i:s'));
+        $this->assertSame("{$this->day} 14:00:00", $fresh->starts_at->format('Y-m-d H:i:s'));
+        $this->assertSame("{$this->day} 15:00:00", $fresh->ends_at->format('Y-m-d H:i:s'));
     }
 
     public function test_an_appointment_can_be_deleted(): void
@@ -117,7 +121,7 @@ class AppointmentCrudTest extends TestCase
         $this->actingAs($this->owner)->post('/appointments', [
             'customer_id' => $this->customer->id,
             'service_id' => $this->service->id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->day} 10:00:00",
         ]);
         $appointment = Appointment::first();
 

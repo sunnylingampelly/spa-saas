@@ -26,9 +26,16 @@ class AppointmentTenantIsolationTest extends TestCase
 
     private Employee $employeeB;
 
+    private string $dayA;
+
+    private string $dayB;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->dayA = now()->addDays(60)->format('Y-m-d');
+        $this->dayB = now()->addDays(61)->format('Y-m-d');
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -58,7 +65,7 @@ class AppointmentTenantIsolationTest extends TestCase
             'customer_id' => $customer->id,
             'employee_id' => $employee->id,
             'service_id' => $service->id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->dayA} 10:00:00",
         ]);
 
         return [$owner, $employee];
@@ -82,7 +89,7 @@ class AppointmentTenantIsolationTest extends TestCase
     public function test_owner_a_cannot_reschedule_appointment_b(): void
     {
         $this->actingAs($this->ownerA)->patch("/appointments/{$this->appointmentB->id}/reschedule", [
-            'starts_at' => '2026-08-06 10:00:00',
+            'starts_at' => "{$this->dayB} 10:00:00",
         ])->assertForbidden();
     }
 
@@ -99,7 +106,7 @@ class AppointmentTenantIsolationTest extends TestCase
             'customer_id' => $this->appointmentB->customer_id,
             'employee_id' => $secondEmployee->id,
             'service_id' => $this->appointmentB->service_id,
-            'starts_at' => '2026-08-05 10:00:00',
+            'starts_at' => "{$this->dayA} 10:00:00",
         ])->assertSessionHasNoErrors();
     }
 }

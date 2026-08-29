@@ -26,7 +26,7 @@ class Customer extends Model implements HasMedia
         'gender', 'email', 'address_line_1', 'address_line_2', 'city', 'state', 'pincode', 'occupation',
         'medical_notes', 'allergy_notes', 'preferred_service_id', 'preferred_employee_id',
         'wallet_balance', 'reward_points', 'referral_code', 'referred_by_customer_id',
-        'tags', 'is_vip', 'customer_since',
+        'tags', 'is_vip', 'customer_since', 'marketing_opt_out', 'marketing_opt_out_at',
     ];
 
     protected function casts(): array
@@ -38,6 +38,8 @@ class Customer extends Model implements HasMedia
             'tags' => 'array',
             'is_vip' => 'boolean',
             'wallet_balance' => 'decimal:2',
+            'marketing_opt_out' => 'boolean',
+            'marketing_opt_out_at' => 'datetime',
         ];
     }
 

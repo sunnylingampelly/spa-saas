@@ -21,9 +21,16 @@ class CustomerHistoryTest extends TestCase
 
     private Service $service;
 
+    private string $firstVisitDate;
+
+    private string $secondVisitDate;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->firstVisitDate = now()->addDays(60)->format('Y-m-d');
+        $this->secondVisitDate = now()->addDays(67)->format('Y-m-d'); // 7 days after firstVisitDate
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -73,8 +80,8 @@ class CustomerHistoryTest extends TestCase
 
     public function test_lifetime_spend_and_average_bill_reflect_paid_invoices(): void
     {
-        $this->billAndPay('2026-08-01 10:00:00');
-        $this->billAndPay('2026-08-08 10:00:00');
+        $this->billAndPay("{$this->firstVisitDate} 10:00:00");
+        $this->billAndPay("{$this->secondVisitDate} 10:00:00");
 
         $repository = app(CustomerHistoryRepositoryInterface::class);
         $stats = $repository->statsFor($this->customer->id);
@@ -102,7 +109,7 @@ class CustomerHistoryTest extends TestCase
 
     public function test_the_customer_show_page_includes_history(): void
     {
-        $this->billAndPay('2026-08-01 10:00:00');
+        $this->billAndPay("{$this->firstVisitDate} 10:00:00");
 
         $response = $this->actingAs($this->owner)->get("/customers/{$this->customer->id}");
 

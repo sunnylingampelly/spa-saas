@@ -79,6 +79,7 @@ class CreateAppointmentAction
                 'employee_id' => $data->employeeId,
                 'service_id' => $data->serviceId,
                 'booking_type' => $data->bookingType,
+                'lead_source' => $data->leadSource,
                 'starts_at' => $startsAt,
                 'ends_at' => $endsAt,
                 'notes' => $data->notes,

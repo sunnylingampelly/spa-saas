@@ -12,6 +12,7 @@ class CreateAppointmentData extends Data
         public readonly string $startsAt,
         public readonly ?int $employeeId = null,
         public readonly string $bookingType = 'advance',
+        public readonly string $leadSource = 'walk_in',
         public readonly ?string $notes = null,
     ) {}
 }
