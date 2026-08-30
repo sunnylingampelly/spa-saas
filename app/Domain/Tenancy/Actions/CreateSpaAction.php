@@ -26,6 +26,7 @@ class CreateSpaAction
                 'state' => $data->state,
                 'onboarding_completed_at' => now(),
                 'razorpay_webhook_token' => Str::random(40),
+                'whatsapp_webhook_token' => Str::random(40),
             ]);
 
             $spa->users()->attach($data->ownerUserId, [

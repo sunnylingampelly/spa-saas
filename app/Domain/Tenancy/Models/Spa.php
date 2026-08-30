@@ -29,12 +29,14 @@ class Spa extends Model implements HasMedia
         'razorpay_key_id', 'razorpay_key_secret', 'razorpay_webhook_secret', 'razorpay_webhook_token',
         'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption',
         'mail_from_address', 'mail_from_name',
+        'whatsapp_phone_number_id', 'whatsapp_business_account_id', 'whatsapp_access_token',
+        'whatsapp_webhook_token', 'whatsapp_display_phone_number', 'whatsapp_verified_name',
     ];
 
-    // Razorpay/SMTP secrets must never round-trip to the browser via an Inertia `'spa' => $spa`
-    // prop, regardless of which controller renders the model — enforced here, not by controller
-    // discipline.
-    protected $hidden = ['razorpay_key_secret', 'razorpay_webhook_secret', 'smtp_password'];
+    // Razorpay/SMTP/WhatsApp secrets must never round-trip to the browser via an Inertia
+    // `'spa' => $spa` prop, regardless of which controller renders the model — enforced here,
+    // not by controller discipline.
+    protected $hidden = ['razorpay_key_secret', 'razorpay_webhook_secret', 'smtp_password', 'whatsapp_access_token'];
 
     protected function casts(): array
     {
@@ -45,6 +47,7 @@ class Spa extends Model implements HasMedia
             'razorpay_key_secret' => 'encrypted',
             'razorpay_webhook_secret' => 'encrypted',
             'smtp_password' => 'encrypted',
+            'whatsapp_access_token' => 'encrypted',
         ];
     }
 
@@ -80,7 +83,7 @@ class Spa extends Model implements HasMedia
     {
         return LogOptions::defaults()
             ->logAll()
-            ->logExcept(['razorpay_key_secret', 'razorpay_webhook_secret', 'smtp_password'])
+            ->logExcept(['razorpay_key_secret', 'razorpay_webhook_secret', 'smtp_password', 'whatsapp_access_token'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

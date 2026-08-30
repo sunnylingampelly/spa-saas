@@ -41,4 +41,9 @@ return [
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
     ],
 
+    'whatsapp' => [
+        // Pinned so a future Meta Graph API version bump is a config change, not a code change.
+        'graph_version' => env('WHATSAPP_GRAPH_API_VERSION', 'v21.0'),
+    ],
+
 ];

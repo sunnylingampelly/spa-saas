@@ -24,6 +24,8 @@ use App\Http\Controllers\Web\SpaOwner\SpaProfileController;
 use App\Http\Controllers\Web\SpaOwner\SubscriptionCheckoutController;
 use App\Http\Controllers\Web\SpaOwner\SubscriptionController;
 use App\Http\Controllers\Web\SpaOwner\SupportTicketController;
+use App\Http\Controllers\Web\SpaOwner\WhatsAppCampaignController;
+use App\Http\Controllers\Web\SpaOwner\WhatsAppTemplateController;
 use App\Http\Controllers\Web\SuperAdmin\ActivityLogController;
 use App\Http\Controllers\Web\SuperAdmin\AdminUserController;
 use App\Http\Controllers\Web\SuperAdmin\AnnouncementController;
@@ -113,6 +115,9 @@ Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'throttle:120,1'])->
         Route::put('/spa/email-settings', [SpaProfileController::class, 'updateEmailSettings'])->name('spa.email-settings.update');
         Route::delete('/spa/email-settings', [SpaProfileController::class, 'disconnectEmailSettings'])->name('spa.email-settings.disconnect');
         Route::post('/spa/email-settings/test', [SpaProfileController::class, 'sendTestEmail'])->name('spa.email-settings.test');
+        Route::put('/spa/whatsapp-settings', [SpaProfileController::class, 'updateWhatsAppSettings'])->name('spa.whatsapp-settings.update');
+        Route::delete('/spa/whatsapp-settings', [SpaProfileController::class, 'disconnectWhatsAppSettings'])->name('spa.whatsapp-settings.disconnect');
+        Route::post('/spa/whatsapp-settings/test', [SpaProfileController::class, 'testWhatsAppConnection'])->name('spa.whatsapp-settings.test');
     });
 
     Route::get('/subscription', [SubscriptionController::class, 'show'])->name('subscription.show');
@@ -192,6 +197,19 @@ Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'subscription.active
         ->except(['edit', 'update'])
         ->parameters(['email-campaigns' => 'campaign']);
     Route::post('/email-campaigns/{campaign}/send', [EmailCampaignController::class, 'send'])->name('email-campaigns.send');
+
+    Route::post('/whatsapp-templates/sync', [WhatsAppTemplateController::class, 'sync'])->name('whatsapp-templates.sync');
+    Route::resource('whatsapp-templates', WhatsAppTemplateController::class)
+        ->only(['index', 'create', 'store', 'destroy'])
+        ->parameters(['whatsapp-templates' => 'template']);
+
+    // Must come before the resource route below — otherwise "audience-preview" is swallowed as a {campaign} id.
+    Route::post('/whatsapp-campaigns/audience-preview', [WhatsAppCampaignController::class, 'audiencePreview'])->name('whatsapp-campaigns.audience-preview');
+
+    Route::resource('whatsapp-campaigns', WhatsAppCampaignController::class)
+        ->except(['edit', 'update'])
+        ->parameters(['whatsapp-campaigns' => 'campaign']);
+    Route::post('/whatsapp-campaigns/{campaign}/send', [WhatsAppCampaignController::class, 'send'])->name('whatsapp-campaigns.send');
 
     // Must come before the resource route below — otherwise these are swallowed as an {expense} id.
     Route::get('/expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');

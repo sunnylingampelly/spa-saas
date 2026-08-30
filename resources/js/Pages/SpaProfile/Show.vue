@@ -19,9 +19,11 @@ const props = defineProps({
     razorpayConfigured: { type: Boolean, required: true },
     razorpayWebhookUrl: { type: String, required: true },
     smtpConfigured: { type: Boolean, required: true },
+    whatsappConfigured: { type: Boolean, required: true },
+    whatsappWebhookUrl: { type: String, required: true },
 });
 
-const tabs = ['General', 'Payment Gateway', 'Email (SMTP)'];
+const tabs = ['General', 'Payment Gateway', 'Email (SMTP)', 'WhatsApp'];
 
 // --- General ---
 const form = useForm({
@@ -123,6 +125,44 @@ async function disconnectEmail() {
 const testEmailForm = useForm({});
 function sendTestEmail() {
     testEmailForm.post('/spa/email-settings/test', { preserveScroll: true });
+}
+
+// --- WhatsApp ---
+const whatsappForm = useForm({
+    whatsapp_phone_number_id: props.spa.whatsapp_phone_number_id,
+    whatsapp_business_account_id: props.spa.whatsapp_business_account_id,
+    whatsapp_access_token: '',
+});
+
+function submitWhatsAppSettings() {
+    whatsappForm.put('/spa/whatsapp-settings', {
+        preserveScroll: true,
+        onSuccess: () => { whatsappForm.whatsapp_access_token = ''; },
+    });
+}
+
+async function disconnectWhatsApp() {
+    const confirmed = await confirmDialog({
+        title: 'Disconnect WhatsApp?',
+        message: 'Campaigns can no longer be sent until you reconnect a WhatsApp Business Account.',
+        confirmLabel: 'Disconnect',
+        danger: true,
+    });
+    if (!confirmed) return;
+
+    useForm({}).delete('/spa/whatsapp-settings', { preserveScroll: true });
+}
+
+const testWhatsAppForm = useForm({});
+function testWhatsAppConnection() {
+    testWhatsAppForm.post('/spa/whatsapp-settings/test', { preserveScroll: true });
+}
+
+const whatsappWebhookUrlCopied = ref(false);
+async function copyWhatsAppWebhookUrl() {
+    await navigator.clipboard.writeText(props.whatsappWebhookUrl);
+    whatsappWebhookUrlCopied.value = true;
+    setTimeout(() => { whatsappWebhookUrlCopied.value = false; }, 2000);
 }
 </script>
 
@@ -273,6 +313,60 @@ function sendTestEmail() {
                                 Send Test Email
                             </BaseButton>
                             <BaseButton v-if="smtpConfigured" type="button" variant="danger" @click="disconnectEmail">Disconnect SMTP</BaseButton>
+                        </div>
+                    </BaseCard>
+                </form>
+            </TabPanel>
+
+            <!-- WhatsApp -->
+            <TabPanel>
+                <form @submit.prevent="submitWhatsAppSettings">
+                    <BaseCard title="WhatsApp Business Account">
+                        <p class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+                            Connect your own Meta WhatsApp Business Account so campaigns send from your own number —
+                            Meta bills each message directly to you, the same as it would through Meta's own console.
+                        </p>
+
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <BaseInput v-model="whatsappForm.whatsapp_phone_number_id" label="Phone Number ID" :error="whatsappForm.errors.whatsapp_phone_number_id" />
+                            <BaseInput v-model="whatsappForm.whatsapp_business_account_id" label="WhatsApp Business Account ID" :error="whatsappForm.errors.whatsapp_business_account_id" />
+                            <BaseInput
+                                v-model="whatsappForm.whatsapp_access_token"
+                                type="password"
+                                label="Access Token"
+                                :placeholder="whatsappConfigured ? 'Leave blank to keep your current token' : ''"
+                                :error="whatsappForm.errors.whatsapp_access_token"
+                                class="sm:col-span-2"
+                            />
+                        </div>
+
+                        <p v-if="spa.whatsapp_display_phone_number" class="mt-3 text-sm text-emerald-600 dark:text-emerald-400">
+                            Connected: {{ spa.whatsapp_display_phone_number }} ({{ spa.whatsapp_verified_name }})
+                        </p>
+
+                        <div class="mt-4">
+                            <label class="form-label">Webhook URL</label>
+                            <div class="flex gap-2">
+                                <input :value="whatsappWebhookUrl" readonly class="form-input flex-1 text-sm text-slate-500 dark:text-slate-400" />
+                                <BaseButton type="button" variant="secondary" @click="copyWhatsAppWebhookUrl">{{ whatsappWebhookUrlCopied ? 'Copied!' : 'Copy' }}</BaseButton>
+                            </div>
+                            <p class="mt-1.5 text-xs text-slate-400">
+                                Paste this into your Meta App's WhatsApp → Configuration → Webhook, and use this same URL's
+                                token as the Verify Token. Subscribe to the "messages" and "message_template_status_update" fields.
+                            </p>
+                        </div>
+
+                        <div class="mt-4 flex flex-wrap items-center gap-3">
+                            <BaseButton type="submit" :disabled="whatsappForm.processing">Save WhatsApp Settings</BaseButton>
+                            <BaseButton
+                                type="button"
+                                variant="secondary"
+                                :disabled="!whatsappConfigured || testWhatsAppForm.processing"
+                                @click="testWhatsAppConnection"
+                            >
+                                Test Connection
+                            </BaseButton>
+                            <BaseButton v-if="whatsappConfigured" type="button" variant="danger" @click="disconnectWhatsApp">Disconnect WhatsApp</BaseButton>
                         </div>
                     </BaseCard>
                 </form>

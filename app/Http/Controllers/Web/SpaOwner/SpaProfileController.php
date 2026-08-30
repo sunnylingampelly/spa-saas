@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Web\SpaOwner;
 
 use App\Domain\Tenancy\Services\SpaMailer;
 use App\Domain\Tenancy\Services\TenantContext;
+use App\Domain\WhatsApp\Exceptions\WhatsAppApiException;
+use App\Domain\WhatsApp\Services\WhatsAppClient;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -20,12 +23,21 @@ class SpaProfileController extends Controller
 
         $this->authorize('view', $spa);
 
+        // Spas created before the WhatsApp connection existed have no token yet — self-heals
+        // here rather than needing a backfill migration, since it's only ever needed once
+        // someone actually opens Settings.
+        if (blank($spa->whatsapp_webhook_token)) {
+            $spa->update(['whatsapp_webhook_token' => Str::random(40)]);
+        }
+
         return Inertia::render('SpaProfile/Show', [
             'spa' => $spa,
             'razorpayKeyId' => $spa->razorpay_key_id,
             'razorpayConfigured' => filled($spa->razorpay_key_id) && filled($spa->razorpay_key_secret),
             'razorpayWebhookUrl' => route('webhooks.razorpay.spa', $spa->razorpay_webhook_token),
             'smtpConfigured' => SpaMailer::isConfigured($spa),
+            'whatsappConfigured' => WhatsAppClient::forSpa($spa)->isConfigured(),
+            'whatsappWebhookUrl' => route('webhooks.whatsapp.verify', $spa->whatsapp_webhook_token),
         ]);
     }
 
@@ -171,5 +183,68 @@ class SpaProfileController extends Controller
         }
 
         return back()->with('success', "Test email sent to {$to}.");
+    }
+
+    public function updateWhatsAppSettings(Request $request, TenantContext $tenantContext): RedirectResponse
+    {
+        $spa = $tenantContext->getCurrentSpa();
+
+        $this->authorize('update', $spa);
+
+        $data = $request->validate([
+            'whatsapp_phone_number_id' => ['nullable', 'string', 'max:255'],
+            'whatsapp_business_account_id' => ['nullable', 'string', 'max:255'],
+            'whatsapp_access_token' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        // whatsapp_access_token never round-trips to the browser (Spa::$hidden), so — same rule
+        // as the Razorpay/SMTP secrets — a blank submission means "leave it untouched," not
+        // "clear it."
+        $updates = collect($data)->except('whatsapp_access_token')->all();
+
+        if (filled($data['whatsapp_access_token'] ?? null)) {
+            $updates['whatsapp_access_token'] = $data['whatsapp_access_token'];
+        }
+
+        $spa->update($updates);
+
+        return back()->with('success', 'WhatsApp settings updated. Use "Test Connection" to confirm they work.');
+    }
+
+    public function disconnectWhatsAppSettings(TenantContext $tenantContext): RedirectResponse
+    {
+        $spa = $tenantContext->getCurrentSpa();
+
+        $this->authorize('update', $spa);
+
+        $spa->update([
+            'whatsapp_phone_number_id' => null,
+            'whatsapp_business_account_id' => null,
+            'whatsapp_access_token' => null,
+            'whatsapp_display_phone_number' => null,
+            'whatsapp_verified_name' => null,
+        ]);
+
+        return back()->with('success', 'WhatsApp disconnected — campaigns can no longer be sent until reconnected.');
+    }
+
+    public function testWhatsAppConnection(TenantContext $tenantContext): RedirectResponse
+    {
+        $spa = $tenantContext->getCurrentSpa();
+
+        $this->authorize('update', $spa);
+
+        try {
+            $details = WhatsAppClient::forSpa($spa)->fetchPhoneNumberDetails();
+        } catch (WhatsAppApiException $e) {
+            return back()->with('error', "Couldn't connect to WhatsApp: {$e->getMessage()}");
+        }
+
+        $spa->update([
+            'whatsapp_display_phone_number' => $details['display_phone_number'],
+            'whatsapp_verified_name' => $details['verified_name'],
+        ]);
+
+        return back()->with('success', "Connected to {$details['display_phone_number']} ({$details['verified_name']}).");
     }
 }

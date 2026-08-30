@@ -13,6 +13,7 @@ use App\Providers\RepositoryServiceProvider;
 use App\Providers\ServicesServiceProvider;
 use App\Providers\SupportServiceProvider;
 use App\Providers\TenancyServiceProvider;
+use App\Providers\WhatsAppServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -28,4 +29,5 @@ return [
     ExpensesServiceProvider::class,
     SupportServiceProvider::class,
     MarketingServiceProvider::class,
+    WhatsAppServiceProvider::class,
 ];

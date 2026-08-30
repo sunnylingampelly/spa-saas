@@ -7,8 +7,10 @@ import {
     BuildingStorefrontIcon,
     CalendarDaysIcon,
     ChartBarIcon,
+    ChatBubbleBottomCenterTextIcon,
     ChatBubbleLeftRightIcon,
     CreditCardIcon,
+    DocumentTextIcon,
     EnvelopeIcon,
     MagnifyingGlassIcon,
     MegaphoneIcon,
@@ -77,6 +79,8 @@ const navigation = [
     { name: 'Settings', href: route('spa.profile.show'), icon: BuildingStorefrontIcon, matches: 'spa.profile.*' },
     { name: 'Subscription', href: route('subscription.show'), icon: CreditCardIcon, matches: 'subscription.*' },
     { name: 'Email Campaigns', href: route('email-campaigns.index'), icon: EnvelopeIcon, matches: 'email-campaigns.*' },
+    { name: 'WhatsApp Templates', href: route('whatsapp-templates.index'), icon: DocumentTextIcon, matches: 'whatsapp-templates.*' },
+    { name: 'WhatsApp Campaigns', href: route('whatsapp-campaigns.index'), icon: ChatBubbleBottomCenterTextIcon, matches: 'whatsapp-campaigns.*' },
     { name: 'Support', href: route('support.tickets.index'), icon: ChatBubbleLeftRightIcon, matches: 'support.tickets.*' },
 ];
 
