@@ -1,5 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
+import { PlusIcon } from '@heroicons/vue/24/outline';
 import axios from 'axios';
 import grapesjs from 'grapesjs';
 import 'grapesjs-preset-newsletter';
@@ -9,6 +10,7 @@ import BaseButton from '../../Components/Ui/BaseButton.vue';
 import BaseCard from '../../Components/Ui/BaseCard.vue';
 import BaseInput from '../../Components/Ui/BaseInput.vue';
 import BaseListbox from '../../Components/Ui/BaseListbox.vue';
+import BaseModal from '../../Components/Ui/BaseModal.vue';
 import BaseTextarea from '../../Components/Ui/BaseTextarea.vue';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout.vue';
 
@@ -81,12 +83,20 @@ watch(mode, async (newMode) => {
     }
 });
 
+const previewTemplate = ref(null);
+
 function useTemplate(template) {
     form.name = template.name;
     form.subject = template.subject;
     form.body_html = template.body_html;
 
     if (mode.value === 'visual') loadIntoEditor(template.body_html);
+    previewTemplate.value = null;
+}
+
+function useBlank() {
+    form.body_html = '';
+    if (mode.value === 'visual') loadIntoEditor('');
 }
 
 const previewHtml = computed(() => form.body_html.replaceAll('{{customer_name}}', 'Priya'));
@@ -121,19 +131,66 @@ function submit() {
 
     <form class="space-y-6" @submit.prevent="submit">
         <BaseCard title="Start from a template">
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <button
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                <div
                     v-for="template in starterTemplates"
                     :key="template.name"
-                    type="button"
-                    class="rounded-xl border border-slate-200 p-3 text-left text-sm hover:border-brand-400 dark:border-slate-700"
+                    class="group cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-900"
                     @click="useTemplate(template)"
                 >
-                    <p class="font-medium text-slate-900 dark:text-white">{{ template.name }}</p>
-                    <p class="mt-1 truncate text-xs text-slate-400">{{ template.subject }}</p>
+                    <div class="relative h-36 overflow-hidden bg-slate-50 dark:bg-slate-800">
+                        <iframe
+                            :srcdoc="template.body_html"
+                            tabindex="-1"
+                            class="pointer-events-none absolute left-0 top-0 h-[400%] w-[400%] origin-top-left scale-[.25] select-none"
+                        />
+                        <div
+                            class="absolute inset-0 flex items-center justify-center gap-2 bg-slate-900/0 opacity-0 transition group-hover:bg-slate-900/50 group-hover:opacity-100"
+                        >
+                            <button
+                                type="button"
+                                class="rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-slate-900 shadow hover:bg-slate-100"
+                                @click.stop="previewTemplate = template"
+                            >
+                                Preview
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded-lg bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white shadow hover:bg-brand-700"
+                                @click.stop="useTemplate(template)"
+                            >
+                                Use this
+                            </button>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 px-3 py-2 dark:border-slate-800">
+                        <p class="truncate text-sm font-medium text-slate-900 dark:text-white">{{ template.name }}</p>
+                        <p class="mt-0.5 truncate text-xs text-slate-400">{{ template.category }}</p>
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    class="flex h-[13.5rem] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 transition hover:border-brand-400 hover:text-brand-500 dark:border-slate-700"
+                    @click="useBlank"
+                >
+                    <PlusIcon class="h-6 w-6" />
+                    <span class="text-sm font-medium">Start from scratch</span>
                 </button>
             </div>
         </BaseCard>
+
+        <BaseModal :show="!!previewTemplate" :title="previewTemplate?.name" max-width-class="max-w-2xl" @close="previewTemplate = null">
+            <iframe
+                v-if="previewTemplate"
+                :srcdoc="previewTemplate.body_html"
+                class="h-[28rem] w-full rounded-lg border border-slate-200 bg-white dark:border-slate-700"
+            />
+            <div class="mt-4 flex justify-end gap-2">
+                <BaseButton type="button" variant="secondary" @click="previewTemplate = null">Close</BaseButton>
+                <BaseButton type="button" @click="useTemplate(previewTemplate)">Use this template</BaseButton>
+            </div>
+        </BaseModal>
 
         <BaseCard title="Details">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

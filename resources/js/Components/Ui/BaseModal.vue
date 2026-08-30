@@ -4,6 +4,7 @@ import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessu
 defineProps({
     show: { type: Boolean, default: false },
     title: { type: String, default: null },
+    maxWidthClass: { type: String, default: 'max-w-lg' },
 });
 
 defineEmits(['close']);
@@ -27,7 +28,7 @@ defineEmits(['close']);
                         enter="duration-200 ease-out" enter-from="opacity-0 scale-95" enter-to="opacity-100 scale-100"
                         leave="duration-150 ease-in" leave-from="opacity-100 scale-100" leave-to="opacity-0 scale-95"
                     >
-                        <DialogPanel class="glass-panel w-full max-w-lg rounded-xl p-6">
+                        <DialogPanel class="glass-panel w-full rounded-xl p-6" :class="maxWidthClass">
                             <h3 v-if="title" class="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
                                 {{ title }}
                             </h3>

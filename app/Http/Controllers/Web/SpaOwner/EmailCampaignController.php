@@ -19,6 +19,7 @@ class EmailCampaignController extends Controller
     private const STARTER_TEMPLATES = [
         [
             'name' => 'Simple announcement',
+            'category' => 'Announcements',
             'subject' => "We've got something new at {spa}",
             'body_html' => <<<'HTML'
 <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1e293b;">
@@ -31,6 +32,7 @@ HTML,
         ],
         [
             'name' => 'Promotional offer',
+            'category' => 'Promotions',
             'subject' => 'A little something just for you',
             'body_html' => <<<'HTML'
 <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1e293b;">
@@ -45,6 +47,7 @@ HTML,
         ],
         [
             'name' => "We've missed you",
+            'category' => 'Win-back',
             'subject' => 'It\'s been a while — come back and relax',
             'body_html' => <<<'HTML'
 <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1e293b;">
@@ -53,6 +56,50 @@ HTML,
     <p style="text-align:center;margin:24px 0;">
         <a href="https://your-booking-link.example.com" style="background:#db2777;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Book Your Next Visit</a>
     </p>
+</div>
+HTML,
+        ],
+        [
+            'name' => 'Thank you for visiting',
+            'category' => 'Retention',
+            'subject' => 'Thank you for visiting {spa}',
+            'body_html' => <<<'HTML'
+<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1e293b;">
+    <h1 style="font-size:22px;">Thank you, {{customer_name}}!</h1>
+    <p style="font-size:15px;line-height:1.6;">It was a pleasure having you with us. We hope you left feeling relaxed and refreshed.</p>
+    <p style="font-size:15px;line-height:1.6;">We'd love to hear how it went — and we can't wait to welcome you back.</p>
+    <p style="text-align:center;margin:24px 0;">
+        <a href="https://your-booking-link.example.com" style="background:#db2777;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Book Your Next Visit</a>
+    </p>
+</div>
+HTML,
+        ],
+        [
+            'name' => 'Birthday treat',
+            'category' => 'Retention',
+            'subject' => 'Happy Birthday from all of us at {spa}',
+            'body_html' => <<<'HTML'
+<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1e293b;">
+    <h1 style="font-size:22px;">Happy Birthday, {{customer_name}}!</h1>
+    <p style="font-size:15px;line-height:1.6;">To celebrate your special day, enjoy a birthday treat on us — <strong>[offer, e.g. a complimentary add-on]</strong> with any service this month.</p>
+    <p style="text-align:center;margin:24px 0;">
+        <a href="https://your-booking-link.example.com" style="background:#db2777;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Book Your Birthday Treat</a>
+    </p>
+</div>
+HTML,
+        ],
+        [
+            'name' => 'Festive greetings offer',
+            'category' => 'Promotions',
+            'subject' => 'Celebrate the season with a little pampering',
+            'body_html' => <<<'HTML'
+<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1e293b;">
+    <h1 style="font-size:22px;">Happy Festivities, {{customer_name}}!</h1>
+    <p style="font-size:15px;line-height:1.6;">This festive season, treat yourself to some well-deserved relaxation. Enjoy <strong>[offer, e.g. 15% off]</strong> on all treatments through [date].</p>
+    <p style="text-align:center;margin:24px 0;">
+        <a href="https://your-booking-link.example.com" style="background:#db2777;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Claim This Offer</a>
+    </p>
+    <p style="font-size:13px;color:#64748b;">Wishing you and your loved ones a wonderful celebration.</p>
 </div>
 HTML,
         ],
