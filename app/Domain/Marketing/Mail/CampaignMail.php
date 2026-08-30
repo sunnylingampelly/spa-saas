@@ -14,10 +14,12 @@ class CampaignMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $spaName = $this->recipient->campaign->spa?->name;
+        $spa = $this->recipient->campaign->spa;
+        $fromAddress = $spa?->mail_from_address ?: config('mail.from.address');
+        $fromName = $spa?->mail_from_name ?: $spa?->name;
 
         return new Envelope(
-            from: $spaName ? new Address(config('mail.from.address'), $spaName) : null,
+            from: $fromName ? new Address($fromAddress, $fromName) : null,
             subject: $this->recipient->campaign->subject,
         );
     }

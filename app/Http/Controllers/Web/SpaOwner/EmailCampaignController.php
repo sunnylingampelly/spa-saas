@@ -132,7 +132,9 @@ HTML,
             'name' => ['required', 'string', 'max:255'],
             'subject' => ['required', 'string', 'max:255'],
             'preheader' => ['nullable', 'string', 'max:255'],
-            'body_html' => ['required', 'string', 'max:50000'],
+            // Raised from 50000 — a GrapesJS export with inline styles is considerably more
+            // verbose than the hand-written starter templates.
+            'body_html' => ['required', 'string', 'max:200000'],
             'audience_filter' => ['required', 'array'],
             'audience_filter.type' => ['required', Rule::in(['all', 'vip', 'tag', 'inactive_days'])],
             'audience_filter.tag' => ['nullable', 'string', 'max:255'],

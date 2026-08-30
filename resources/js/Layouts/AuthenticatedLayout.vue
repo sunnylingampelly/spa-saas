@@ -74,7 +74,7 @@ const navigation = [
     { name: 'Expenses', href: route('expenses.index'), icon: BanknotesIcon, matches: 'expenses.*' },
     { name: 'Commissions', href: route('reports.commissions'), icon: ChartBarIcon, matches: 'reports.commissions' },
     { name: 'Revenue by Source', href: route('reports.lead-sources'), icon: MegaphoneIcon, matches: 'reports.lead-sources' },
-    { name: 'Spa Profile', href: route('spa.profile.show'), icon: BuildingStorefrontIcon, matches: 'spa.profile.*' },
+    { name: 'Settings', href: route('spa.profile.show'), icon: BuildingStorefrontIcon, matches: 'spa.profile.*' },
     { name: 'Subscription', href: route('subscription.show'), icon: CreditCardIcon, matches: 'subscription.*' },
     { name: 'Email Campaigns', href: route('email-campaigns.index'), icon: EnvelopeIcon, matches: 'email-campaigns.*' },
     { name: 'Support', href: route('support.tickets.index'), icon: ChatBubbleLeftRightIcon, matches: 'support.tickets.*' },
@@ -200,7 +200,7 @@ onMounted(() => {
     });
     uiStore.registerCommand({
         id: 'nav-spa-profile',
-        label: 'Go to Spa Profile',
+        label: 'Go to Settings',
         icon: BuildingStorefrontIcon,
         href: route('spa.profile.show'),
     });
@@ -332,7 +332,7 @@ onMounted(() => {
                                 @click="userMenuOpen = false"
                             >
                                 <BuildingStorefrontIcon class="h-4 w-4" />
-                                Spa Profile
+                                Settings
                             </Link>
                             <Link
                                 :href="route('subscription.show')"

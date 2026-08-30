@@ -110,6 +110,9 @@ Route::middleware(['auth', 'role:spa_owner', 'spa.context', 'throttle:120,1'])->
     Route::middleware('throttle:financial')->group(function () {
         Route::put('/spa/payment-settings', [SpaProfileController::class, 'updatePaymentSettings'])->name('spa.payment-settings.update');
         Route::delete('/spa/payment-settings', [SpaProfileController::class, 'disconnectPaymentSettings'])->name('spa.payment-settings.disconnect');
+        Route::put('/spa/email-settings', [SpaProfileController::class, 'updateEmailSettings'])->name('spa.email-settings.update');
+        Route::delete('/spa/email-settings', [SpaProfileController::class, 'disconnectEmailSettings'])->name('spa.email-settings.disconnect');
+        Route::post('/spa/email-settings/test', [SpaProfileController::class, 'sendTestEmail'])->name('spa.email-settings.test');
     });
 
     Route::get('/subscription', [SubscriptionController::class, 'show'])->name('subscription.show');

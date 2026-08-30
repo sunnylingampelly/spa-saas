@@ -127,12 +127,12 @@ class EmailCampaignSendingTest extends TestCase
 
     public function test_a_send_failure_marks_the_recipient_failed_and_increments_bounced_count(): void
     {
-        // Force a real send failure by pointing the default mailer at an unreachable SMTP host.
-        config([
-            'mail.default' => 'smtp',
-            'mail.mailers.smtp.host' => '127.0.0.1',
-            'mail.mailers.smtp.port' => 1,
-            'mail.mailers.smtp.timeout' => 1,
+        // Force a real send failure via this spa's own SMTP settings (an unreachable host) —
+        // SendCampaignEmailJob resolves the mailer per-spa now, so a broken *global* mailer
+        // config would no longer be reached at all.
+        Spa::withoutGlobalScopes()->find($this->spaId)->update([
+            'smtp_host' => '127.0.0.1',
+            'smtp_port' => '1',
         ]);
 
         $customer = CustomerFactory::new()->create(['spa_id' => $this->spaId, 'name' => 'Anjali', 'email' => 'anjali@example.com']);

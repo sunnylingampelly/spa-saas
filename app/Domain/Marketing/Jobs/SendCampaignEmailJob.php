@@ -4,6 +4,7 @@ namespace App\Domain\Marketing\Jobs;
 
 use App\Domain\Marketing\Mail\CampaignMail;
 use App\Domain\Marketing\Models\EmailCampaignRecipient;
+use App\Domain\Tenancy\Services\SpaMailer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -31,7 +32,8 @@ class SendCampaignEmailJob implements ShouldQueue
         }
 
         try {
-            Mail::to($recipient->email)->send(new CampaignMail($recipient));
+            $mailerName = SpaMailer::mailerFor($recipient->campaign->spa);
+            Mail::mailer($mailerName)->to($recipient->email)->send(new CampaignMail($recipient));
 
             $recipient->update(['status' => 'sent', 'sent_at' => now()]);
             $recipient->campaign()->increment('sent_count');

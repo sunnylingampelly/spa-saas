@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Web\SpaOwner;
 
+use App\Domain\Tenancy\Services\SpaMailer;
 use App\Domain\Tenancy\Services\TenantContext;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class SpaProfileController extends Controller
 {
@@ -22,6 +25,7 @@ class SpaProfileController extends Controller
             'razorpayKeyId' => $spa->razorpay_key_id,
             'razorpayConfigured' => filled($spa->razorpay_key_id) && filled($spa->razorpay_key_secret),
             'razorpayWebhookUrl' => route('webhooks.razorpay.spa', $spa->razorpay_webhook_token),
+            'smtpConfigured' => SpaMailer::isConfigured($spa),
         ]);
     }
 
@@ -98,5 +102,74 @@ class SpaProfileController extends Controller
         ]);
 
         return back()->with('success', 'Razorpay disconnected.');
+    }
+
+    public function updateEmailSettings(Request $request, TenantContext $tenantContext): RedirectResponse
+    {
+        $spa = $tenantContext->getCurrentSpa();
+
+        $this->authorize('update', $spa);
+
+        $data = $request->validate([
+            'smtp_host' => ['nullable', 'string', 'max:255'],
+            'smtp_port' => ['nullable', 'string', 'max:10'],
+            'smtp_username' => ['nullable', 'string', 'max:255'],
+            'smtp_password' => ['nullable', 'string', 'max:255'],
+            'smtp_encryption' => ['nullable', 'in:tls,ssl'],
+            'mail_from_address' => ['nullable', 'email', 'max:255'],
+            'mail_from_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        // smtp_password never round-trips to the browser (Spa::$hidden), so — same rule as
+        // the Razorpay secrets above — a blank submission means "leave it untouched," not
+        // "clear it."
+        $updates = collect($data)->except('smtp_password')->all();
+
+        if (filled($data['smtp_password'] ?? null)) {
+            $updates['smtp_password'] = $data['smtp_password'];
+        }
+
+        $spa->update($updates);
+
+        return back()->with('success', 'Email settings updated.');
+    }
+
+    public function disconnectEmailSettings(TenantContext $tenantContext): RedirectResponse
+    {
+        $spa = $tenantContext->getCurrentSpa();
+
+        $this->authorize('update', $spa);
+
+        $spa->update([
+            'smtp_host' => null,
+            'smtp_port' => null,
+            'smtp_username' => null,
+            'smtp_password' => null,
+            'smtp_encryption' => null,
+            'mail_from_address' => null,
+            'mail_from_name' => null,
+        ]);
+
+        return back()->with('success', 'Custom SMTP disconnected — campaigns will send through the platform mailer again.');
+    }
+
+    public function sendTestEmail(Request $request, TenantContext $tenantContext): RedirectResponse
+    {
+        $spa = $tenantContext->getCurrentSpa();
+
+        $this->authorize('update', $spa);
+
+        $to = $request->user()->email;
+
+        try {
+            Mail::mailer(SpaMailer::mailerFor($spa))->raw(
+                "This is a test email from {$spa->name}'s SpaOrbit email settings — if you're reading this, your SMTP configuration works.",
+                fn ($message) => $message->to($to)->subject('SpaOrbit test email'),
+            );
+        } catch (Throwable $e) {
+            return back()->with('error', "Couldn't send a test email: {$e->getMessage()}");
+        }
+
+        return back()->with('success', "Test email sent to {$to}.");
     }
 }

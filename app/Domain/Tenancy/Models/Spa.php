@@ -27,11 +27,14 @@ class Spa extends Model implements HasMedia
         'weekly_off_days', 'holiday_calendar', 'invoice_prefix', 'invoice_footer_note',
         'financial_year_start_month', 'timezone', 'currency', 'status', 'onboarding_completed_at',
         'razorpay_key_id', 'razorpay_key_secret', 'razorpay_webhook_secret', 'razorpay_webhook_token',
+        'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption',
+        'mail_from_address', 'mail_from_name',
     ];
 
-    // Razorpay secrets must never round-trip to the browser via an Inertia `'spa' => $spa` prop,
-    // regardless of which controller renders the model — enforced here, not by controller discipline.
-    protected $hidden = ['razorpay_key_secret', 'razorpay_webhook_secret'];
+    // Razorpay/SMTP secrets must never round-trip to the browser via an Inertia `'spa' => $spa`
+    // prop, regardless of which controller renders the model — enforced here, not by controller
+    // discipline.
+    protected $hidden = ['razorpay_key_secret', 'razorpay_webhook_secret', 'smtp_password'];
 
     protected function casts(): array
     {
@@ -41,6 +44,7 @@ class Spa extends Model implements HasMedia
             'onboarding_completed_at' => 'datetime',
             'razorpay_key_secret' => 'encrypted',
             'razorpay_webhook_secret' => 'encrypted',
+            'smtp_password' => 'encrypted',
         ];
     }
 
@@ -76,7 +80,7 @@ class Spa extends Model implements HasMedia
     {
         return LogOptions::defaults()
             ->logAll()
-            ->logExcept(['razorpay_key_secret', 'razorpay_webhook_secret'])
+            ->logExcept(['razorpay_key_secret', 'razorpay_webhook_secret', 'smtp_password'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
